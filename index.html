@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>CZK MAKI | Alta Gastronomia Japonesa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; }
+        .hero-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; object-fit: cover; transition: all 0.3s ease; }
+        .bg-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; transition: all 0.3s ease; }
+        .glass-card { background: rgba(55, 55, 65, 0.88); backdrop-filter: blur(16px); border: 1px solid rgba(220, 38, 38, 0.35); box-shadow: 0 25px 40px -15px rgba(0,0,0,0.4); }
+        .glass-card-solid { background: rgba(65, 65, 75, 0.94); backdrop-filter: blur(12px); border: 1px solid rgba(220, 38, 38, 0.4); }
+        .btn-red-czk { background: linear-gradient(105deg, #dc2626 0%, #b91c1c 100%); transition: all 0.25s cubic-bezier(0.2, 0.9, 0.4, 1.1); box-shadow: 0 4px 12px rgba(220,38,38,0.3); }
+        .btn-red-czk:hover { transform: translateY(-2px); box-shadow: 0 12px 24px -8px rgba(220,38,38,0.6); filter: brightness(1.05); }
+        .admin-tab-content { display: none; }
+        .admin-tab-content.active { display: block; animation: fadeIn 0.25s ease; }
+        .entregador-tab-content { display: none; }
+        .entregador-tab-content.active { display: block; animation: fadeIn 0.25s ease; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+        .carousel-wrapper { position: relative; overflow: hidden; }
+        .carousel-track-animated { display: flex; gap: 20px; animation: scrollCarousel 30s linear infinite; width: fit-content; }
+        .carousel-wrapper:hover .carousel-track-animated { animation-play-state: paused; }
+        @keyframes scrollCarousel { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+        .carousel-item { flex-shrink: 0; width: 260px; transition: transform 0.3s ease; }
+        .carousel-item:hover { transform: scale(1.02); }
+        input, select, textarea { outline: none; transition: all 0.2s ease; background: #3a3a45; border: 1px solid #8a8a95; color: #ffffff; }
+        input:focus, select:focus, textarea:focus { border-color: #dc2626; box-shadow: 0 0 0 2px rgba(220,38,38,0.3); }
+        #screen-auth #cliente-cidade { background-color: #ffffff; color: #1f2937; border: 1px solid #d1d5db; }
+        #screen-auth #cliente-cidade:invalid { color: #9ca3af; }
+        #admin-panel input, #admin-panel select, #admin-panel textarea { background: #2d2d35; border-color: #6a6a75; color: #f0f0f0; }
+        #admin-panel label { color: #e0e0e0; font-weight: 500; }
+        .product-card { transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1); background: rgba(55, 55, 65, 0.7); border: 1px solid rgba(220, 38, 38, 0.3); }
+        .product-card:hover { transform: translateY(-4px); border-color: rgba(220,38,38,0.7); background: rgba(75, 75, 85, 0.85); }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #4a4a55; }
+        ::-webkit-scrollbar-thumb { background: #dc2626; border-radius: 10px; }
+        .quantity-control { display: inline-flex; align-items: center; gap: 8px; background: #3a3a45; padding: 4px 8px; border-radius: 40px; }
+        .quantity-btn { background: #dc2626; color: white; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; user-select: none; }
+        .quantity-btn:hover { background: #b91c1c; }
+        .logo-preview { max-width: 120px; max-height: 80px; object-fit: contain; margin-top: 8px; border-radius: 12px; background: #2a2a35; padding: 4px; }
+        #logo-container, #logo-auth-container { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
+        #logo-container img, #logo-auth-container img { max-height: 55px; width: auto; object-fit: contain; border-radius: 12px; }
+        .clickable-img { cursor: pointer; transition: opacity 0.2s; }
+        .clickable-img:hover { opacity: 0.85; }
+        .image-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
+        .image-modal img { max-width: 90%; max-height: 90%; width: auto; height: auto; object-fit: contain; border-radius: 16px; box-shadow: 0 0 40px rgba(0,0,0,0.5); border: 2px solid rgba(220,38,38,0.5); }
+        .image-modal .close-modal { position: absolute; top: 20px; right: 30px; font-size: 40px; color: white; cursor: pointer; background: none; border: none; font-weight: bold; transition: 0.2s; }
+        .image-modal .close-modal:hover { color: #dc2626; }
+        .user-icon { cursor: pointer; transition: transform 0.2s; }
+        .user-icon:hover { transform: scale(1.05); color: #dc2626; }
+        .pix-info { background: rgba(0,0,0,0.3); border-radius: 12px; padding: 12px; margin-top: 12px; border-left: 3px solid #22c55e; }
+        .copy-btn { background: #22c55e; color: white; border: none; border-radius: 20px; padding: 4px 12px; font-size: 12px; cursor: pointer; transition: 0.2s; }
+        .copy-btn:hover { background: #16a34a; }
+        .filtro-periodo { background: #2d2d35; border: 1px solid #dc2626; border-radius: 40px; padding: 6px 12px; color: white; cursor: pointer; transition: 0.2s; }
+        .filtro-periodo.ativo { background: #dc2626; color: white; }
+        .filtro-periodo:hover { background: #b91c1c; }
+        .btn-entrega { background: #22c55e; transition: 0.2s; }
+        .btn-entrega:hover { background: #16a34a; transform: scale(1.02); }
+        .cidade-item { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
+        .cidade-item input { flex: 1; }
+        .bg-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 12px; margin-top: 16px; margin-bottom: 16px; }
+        .bg-thumb { aspect-ratio: 16/9; border-radius: 12px; overflow: hidden; cursor: pointer; border: 2px solid transparent; transition: all 0.2s ease; box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
+        .bg-thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.2s; }
+        .bg-thumb:hover { transform: scale(1.02); border-color: #dc2626; box-shadow: 0 8px 16px rgba(220,38,38,0.4); }
+        .bg-preview { width: 100%; max-height: 180px; object-fit: cover; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2); margin-top: 10px; margin-bottom: 10px; }
+        .search-suggestions { position: absolute; top: 100%; left: 0; right: 0; background: #2a2a35; border: 1px solid rgba(220, 38, 38, 0.4); border-radius: 0 0 12px 12px; max-height: 200px; overflow-y: auto; z-index: 50; display: none; margin-top: 2px; }
+        .search-suggestions .suggestion-item { padding: 8px 12px; cursor: pointer; color: #e0e0e0; font-size: 14px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .search-suggestions .suggestion-item:hover { background: #3a3a4a; color: #dc2626; }
+        .popup-pedido { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 2000; display: flex; align-items: center; justify-content: center; }
+        .popup-pedido-content { background: #2a2a35; border-radius: 2rem; padding: 2rem; text-align: center; max-width: 400px; width: 90%; border: 1px solid #dc2626; box-shadow: 0 0 30px rgba(220,38,38,0.5); }
+        .btn-popup-verde { background: #22c55e; color: white; font-weight: bold; padding: 12px 24px; border-radius: 40px; font-size: 1.2rem; margin-top: 20px; border: none; cursor: pointer; transition: 0.2s; }
+        .btn-popup-verde:hover { background: #16a34a; transform: scale(1.02); }
+        .entregador-subtab { cursor: pointer; padding: 8px 16px; border-radius: 40px; background: rgba(255,255,255,0.1); transition: 0.2s; margin-right: 8px; display: inline-block; }
+        .entregador-subtab.active { background: #dc2626; color: white; }
+        .entregador-pedidos { display: none; }
+        .entregador-pedidos.active { display: block; }
+        .btn-recibo { background: #2563eb; transition: 0.2s; }
+        .btn-recibo:hover { background: #1d4ed8; }
+        .back-arrow { cursor: pointer; transition: transform 0.2s, color 0.2s; color: white; }
+        .back-arrow:hover { transform: scale(1.1); color: #dc2626; }
+        .relatorio-container { background: rgba(0,0,0,0.3); border-radius: 16px; padding: 16px; margin-bottom: 20px; border-left: 4px solid #dc2626; position: relative; }
+        .fechar-relatorio { position: absolute; top: 10px; right: 10px; background: none; border: none; color: #aaa; cursor: pointer; font-size: 18px; }
+        .fechar-relatorio:hover { color: white; }
+        .filtro-data-controle { display: flex; justify-content: flex-end; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+    <img src="https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?q=80&w=2070&auto=format" 
+         alt="Sushi de alta gastronomia" class="hero-bg" id="dynamic-bg">
+    <div class="bg-overlay" id="dynamic-overlay"></div>
+
+    <!-- TELA DE CADASTRO CLIENTE -->
+    <div id="screen-auth" class="fixed inset-0 z-50 flex items-center justify-center p-5">
+        <div class="glass-card rounded-3xl p-8 w-full max-w-md border border-red-700/50 shadow-2xl shadow-red-900/20">
+            <div class="text-center mb-7">
+                <div id="logo-auth-container"></div>
+                <p id="subtitulo-auth" class="text-[10px] text-white/60 uppercase tracking-[0.25em] mt-2">L'art culinaire japonais</p>
+            </div>
+            <form id="form-cliente" class="space-y-5" onsubmit="salvarCadastro(event)">
+                <div><label class="text-[11px] text-white/60 uppercase">Nome Completo</label><input type="text" id="cliente-nome" required class="w-full rounded-xl p-3 text-sm"></div>
+                <div><label class="text-[11px] text-white/60 uppercase">WhatsApp (com DDD)</label><input type="tel" id="cliente-whats" required placeholder="(11) 99999-9999" class="w-full rounded-xl p-3 text-sm"></div>
+                <div class="space-y-3">
+                    <div><label class="text-[11px] text-white/60 uppercase">Rua</label><input type="text" id="cliente-rua" required placeholder="Nome da rua / avenida" class="w-full rounded-xl p-3 text-sm"></div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div><label class="text-[11px] text-white/60 uppercase">Número</label><input type="text" id="cliente-numero" required placeholder="Nº" class="w-full rounded-xl p-3 text-sm"></div>
+                        <div><label class="text-[11px] text-white/60 uppercase">Bairro</label>
+                            <select id="cliente-bairro" required class="w-full rounded-xl p-3 text-sm">
+                                <option value="" disabled selected>Selecione o bairro</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div><label class="text-[11px] text-white/60 uppercase">Cidade</label>
+                        <select id="cliente-cidade" required class="w-full rounded-xl p-3 text-sm" onchange="atualizarBairros()">
+                            <option value="" disabled selected>Selecione a cidade</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="w-full btn-red-czk text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2"><i class="fas fa-utensils"></i> INICIAR EXPERIÊNCIA <i class="fas fa-arrow-right"></i></button>
+            </form>
+            <button onclick="abrirLoginProprietario()" class="w-full mt-5 text-[11px] text-white/40 hover:text-red-400/70 text-center flex items-center justify-center gap-2"><i class="fas fa-lock"></i> Acesso Privado</button>
+        </div>
+    </div>
+
+    <!-- MODAL LOGIN ADMIN -->
+    <div id="modal-proprietario" class="fixed inset-0 z-50 bg-[#3a3a45]/98 hidden items-center justify-center p-4 backdrop-blur-md">
+        <div class="glass-card-solid rounded-2xl p-6 w-full max-w-sm border border-red-700/60 shadow-2xl">
+            <div class="flex flex-col items-center mb-4"><i class="fas fa-crown text-3xl text-red-500 mb-2"></i><h3 class="text-xl font-bold text-red-500">Área Restrita</h3></div>
+            <input type="password" id="senha-admin" placeholder="Senha Mestre" class="w-full rounded-xl p-3 mb-4 text-sm">
+            <button onclick="validarAdmin()" class="w-full btn-red-czk py-2.5 rounded-xl font-semibold"><i class="fas fa-sign-in-alt mr-2"></i>Acessar Painel</button>
+            <button onclick="fecharModalAdmin()" class="w-full mt-3 text-white/40 text-sm">Cancelar</button>
+            <div class="mt-4 border-t border-white/15 pt-4">
+                <button onclick="abrirLoginEntregador()" class="w-full bg-yellow-600/80 hover:bg-yellow-600 py-2 rounded-xl font-semibold flex items-center justify-center gap-2"><i class="fas fa-motorcycle"></i> Acesso Entregador</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL LOGIN ENTREGADOR -->
+    <div id="modal-entregador" class="fixed inset-0 z-50 bg-[#3a3a45]/98 hidden items-center justify-center p-4 backdrop-blur-md">
+        <div class="glass-card-solid rounded-2xl p-6 w-full max-w-sm border border-yellow-600/60 shadow-2xl">
+            <div class="flex flex-col items-center mb-4"><i class="fas fa-motorcycle text-3xl text-yellow-400 mb-2"></i><h3 class="text-xl font-bold text-yellow-400">Área do Entregador</h3></div>
+            <input type="text" id="login-entregador" placeholder="Login" class="w-full rounded-xl p-3 mb-3 text-sm">
+            <input type="password" id="senha-entregador" placeholder="Senha" class="w-full rounded-xl p-3 mb-4 text-sm">
+            <button onclick="validarEntregador()" class="w-full bg-yellow-600 hover:bg-yellow-500 py-2.5 rounded-xl font-semibold"><i class="fas fa-sign-in-alt mr-2"></i>Acessar</button>
+            <button onclick="fecharModalEntregador()" class="w-full mt-3 text-white/40 text-sm">Cancelar</button>
+        </div>
+    </div>
+
+    <!-- PAINEL ADMIN -->
+    <div id="admin-panel" class="fixed inset-0 z-50 bg-[#2a2a35] overflow-y-auto hidden p-5">
+        <div class="max-w-6xl mx-auto">
+            <div class="flex justify-between items-center border-b border-red-800/40 pb-4 mb-7">
+                <div class="flex items-center gap-3"><i class="fas fa-sliders-h text-red-500 text-2xl"></i><h2 class="text-2xl font-bold tracking-tight text-white">Executive Dashboard</h2></div>
+                <button onclick="fecharAdmin()" class="text-white/50 hover:text-red-500 text-3xl">&times;</button>
+            </div>
+            <div class="flex flex-wrap gap-3 mb-7 border-b border-white/15 pb-4">
+                <button onclick="switchTab('pedidos-ativos')" class="tab-admin-btn px-5 py-2 rounded-full bg-red-900/40 text-red-400 font-semibold flex items-center gap-2"><i class="fas fa-clipboard-list"></i> Pedidos</button>
+                <button onclick="switchTab('controle-entrega')" class="tab-admin-btn px-5 py-2 rounded-full text-white/80 hover:text-white flex items-center gap-2"><i class="fas fa-truck"></i> Controle Entrega</button>
+                <button onclick="switchTab('config-empresa')" class="tab-admin-btn px-5 py-2 rounded-full text-white/80 hover:text-white flex items-center gap-2"><i class="fas fa-building"></i> Empresa</button>
+                <button onclick="switchTab('logo-config')" class="tab-admin-btn px-5 py-2 rounded-full text-white/80 hover:text-white flex items-center gap-2"><i class="far fa-image"></i> Logomarca</button>
+                <button onclick="switchTab('background-config')" class="tab-admin-btn px-5 py-2 rounded-full text-white/80 hover:text-white flex items-center gap-2"><i class="fas fa-palette"></i> Personalizar Fundo</button>
+                <button onclick="switchTab('cardapio-crud')" class="tab-admin-btn px-5 py-2 rounded-full text-white/80 hover:text-white flex items-center gap-2"><i class="fas fa-utensils"></i> Cardápio</button>
+                <button onclick="switchTab('taxas-regioes')" class="tab-admin-btn px-5 py-2 rounded-full text-white/80 hover:text-white flex items-center gap-2"><i class="fas fa-truck"></i> Taxas</button>
+                <button onclick="switchTab('cidades')" class="tab-admin-btn px-5 py-2 rounded-full text-white/80 hover:text-white flex items-center gap-2"><i class="fas fa-city"></i> Cidades</button>
+                <button onclick="switchTab('pedidos-list')" class="tab-admin-btn px-5 py-2 rounded-full text-white/80 hover:text-white flex items-center gap-2"><i class="fas fa-history"></i> Histórico</button>
+                <button onclick="switchTab('entregadores')" class="tab-admin-btn px-5 py-2 rounded-full text-white/80 hover:text-white flex items-center gap-2"><i class="fas fa-users-cog"></i> Entregadores</button>
+            </div>
+
+            <!-- Pedidos ativos (em produção) -->
+            <div id="pedidos-ativos" class="admin-tab-content active">
+                <div class="glass-card-solid rounded-2xl p-6 border border-red-800/40">
+                    <h3 class="text-xl font-semibold text-red-400 mb-5"><i class="fas fa-concierge-bell"></i> Pedidos em andamento</h3>
+                    <div id="lista-pedidos-ativos" class="space-y-4 max-h-[55vh] overflow-y-auto"></div>
+                </div>
+            </div>
+
+            <!-- Controle Entrega (agrupado por entregador) com filtro de data -->
+            <div id="controle-entrega" class="admin-tab-content">
+                <div class="glass-card-solid rounded-2xl p-6 border border-red-800/40">
+                    <div class="flex justify-between items-center mb-5">
+                        <h3 class="text-xl font-semibold text-red-400"><i class="fas fa-truck-moving"></i> Controle de Entregas</h3>
+                        <div class="filtro-data-controle">
+                            <label class="text-white/80 text-sm mr-2">Filtrar por data:</label>
+                            <input type="date" id="filtro-data-controle" class="bg-[#2d2d35] border border-red-800 rounded-lg p-2 text-white text-sm">
+                            <button onclick="aplicarFiltroDataControle()" class="ml-2 bg-red-700 hover:bg-red-600 px-3 py-2 rounded-lg text-sm"><i class="fas fa-filter"></i> Filtrar</button>
+                            <button onclick="limparFiltroDataControle()" class="ml-2 bg-gray-600 hover:bg-gray-500 px-3 py-2 rounded-lg text-sm"><i class="fas fa-undo"></i> Limpar</button>
+                        </div>
+                    </div>
+                    <div id="controle-entregadores-container" class="space-y-6"></div>
+                </div>
+            </div>
+
+            <div id="config-empresa" class="admin-tab-content">
+                <div class="glass-card-solid rounded-2xl p-6 border border-red-800/40">
+                    <h3 class="text-xl font-semibold text-red-400 mb-5"><i class="fas fa-store mr-2"></i> Dados do Estabelecimento</h3>
+                    <div class="grid md:grid-cols-2 gap-5">
+                        <div><label class="text-white/80 text-xs">Nome da Loja</label><input type="text" id="empresa-nome" class="w-full rounded-xl p-3"></div>
+                        <div><label class="text-white/80 text-xs">WhatsApp</label><input type="text" id="empresa-whats" class="w-full rounded-xl p-3"></div>
+                        <div><label class="text-white/80 text-xs">CNPJ</label><input type="text" id="empresa-cnpj" class="w-full rounded-xl p-3"></div>
+                        <div><label class="text-white/80 text-xs">Endereço (Loja)</label><input type="text" id="empresa-endereco" class="w-full rounded-xl p-3"></div>
+                        <div class="md:col-span-2"><label class="text-white/80 text-xs">Chave PIX</label><input type="text" id="empresa-pix" class="w-full rounded-xl p-3"></div>
+                    </div>
+                    <button onclick="salvarConfigEmpresa()" class="mt-6 bg-emerald-700 hover:bg-emerald-600 py-3 rounded-xl font-bold w-full flex items-center justify-center gap-2"><i class="fas fa-save"></i> Salvar</button>
+                </div>
+            </div>
+
+            <div id="logo-config" class="admin-tab-content">
+                <div class="glass-card-solid rounded-2xl p-6 border border-red-800/40">
+                    <h3 class="text-xl font-semibold text-red-400 mb-5"><i class="far fa-image"></i> Personalizar Logomarca e Subtítulo</h3>
+                    <div class="mb-4">
+                        <label class="text-white/80 text-sm block mb-2">Texto da Logomarca</label>
+                        <input type="text" id="logo-texto" placeholder="Ex: 'CZK MAKI'" class="w-full rounded-xl p-3 mb-3">
+                        <label class="text-white/80 text-sm block mb-2">Estilo</label>
+                        <select id="logo-estilo" class="w-full rounded-xl p-3">
+                            <option value="tracking-tighter">Normal</option>
+                            <option value="tracking-widest">Espaçado</option>
+                            <option value="uppercase">MAIÚSCULO</option>
+                        </select>
+                    </div>
+                    <div class="border-t border-white/15 pt-4 mt-2">
+                        <label class="text-white/80 text-sm block mb-2"><i class="far fa-comment"></i> Subtítulo (frase abaixo da logo)</label>
+                        <input type="text" id="subtitulo-texto" placeholder="Ex: 'L'art culinaire japonais'" class="w-full rounded-xl p-3 mb-3">
+                        <label class="text-white/80 text-sm block mb-2"><i class="fas fa-upload"></i> Enviar imagem (logomarca)</label>
+                        <div class="flex items-center gap-3">
+                            <input type="file" id="upload-logo" accept="image/*" class="hidden">
+                            <button onclick="document.getElementById('upload-logo').click()" class="bg-red-700/80 hover:bg-red-600 px-4 py-2 rounded-full text-sm flex items-center gap-2"><i class="fas fa-paperclip"></i> Anexar imagem</button>
+                            <span id="logo-file-name" class="text-white/40 text-xs">Nenhum arquivo</span>
+                        </div>
+                        <div id="preview-logo-area" class="mt-3"></div>
+                        <button onclick="salvarLogomarca()" class="mt-5 bg-emerald-700 hover:bg-emerald-600 py-2 px-5 rounded-xl font-bold w-full flex items-center justify-center gap-2"><i class="fas fa-save"></i> Salvar Logomarca e Subtítulo</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="background-config" class="admin-tab-content">
+                <div class="glass-card-solid rounded-2xl p-6 border border-red-800/40">
+                    <h3 class="text-xl font-semibold text-red-400 mb-5"><i class="fas fa-palette"></i> Personalizar Fundo das Telas</h3>
+                    <div class="mb-5 p-3 bg-black/30 rounded-xl border border-white/10">
+                        <p class="text-white/80 text-sm font-semibold mb-3"><i class="fas fa-images mr-2"></i> 🖼️ Clique em uma imagem abaixo para trocar o fundo instantaneamente</p>
+                        <div class="bg-gallery" id="bg-gallery-container"></div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="text-white/80 text-sm block mb-2">📸 Preview da imagem atual</label>
+                        <img id="preview-bg-img" class="bg-preview" src="" alt="Preview do fundo">
+                    </div>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-white/80 text-sm block mb-2">🌐 Ou cole a URL da sua imagem:</label>
+                            <div class="flex gap-2 flex-wrap">
+                                <input type="text" id="bg-url" placeholder="https://exemplo.com/imagem.jpg" class="flex-1 rounded-xl p-2">
+                                <button onclick="aplicarBgUrl()" class="bg-emerald-700 hover:bg-emerald-600 px-4 py-2 rounded-xl text-sm"><i class="fas fa-check"></i> Aplicar URL</button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-white/80 text-sm block mb-2">📁 Ou faça upload de uma imagem do seu computador:</label>
+                            <input type="file" id="upload-bg" accept="image/*" class="w-full rounded-xl p-2 bg-black/40 text-white border border-white/20">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div><label class="text-white/80 text-sm block mb-2">Cor do Overlay (início)</label><input type="color" id="overlay-color1" value="#1e1e23" class="w-full rounded p-1"></div>
+                            <div><label class="text-white/80 text-sm block mb-2">Cor do Overlay (fim)</label><input type="color" id="overlay-color2" value="#141419" class="w-full rounded p-1"></div>
+                        </div>
+                        <div>
+                            <label class="text-white/80 text-sm block mb-2">Opacidade do Overlay (0 = transparente, 1 = sólido)</label>
+                            <input type="range" id="overlay-opacity" min="0" max="1" step="0.05" value="0.7" class="w-full">
+                            <span id="opacity-value" class="text-white/60 text-xs">0.7</span>
+                        </div>
+                        <div>
+                            <label class="text-white/80 text-sm block mb-2">Brilho da imagem (0.2 = escuro, 1 = original)</label>
+                            <input type="range" id="bg-brightness" min="0.2" max="1" step="0.05" value="0.35" class="w-full">
+                            <span id="brightness-value" class="text-white/60 text-xs">0.35</span>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="salvarConfigFundo()" class="bg-emerald-700 hover:bg-emerald-600 py-2 px-5 rounded-xl font-bold flex-1"><i class="fas fa-save"></i> Salvar Fundo</button>
+                            <button onclick="resetarFundoPadrao()" class="bg-gray-600 hover:bg-gray-500 py-2 px-5 rounded-xl font-bold"><i class="fas fa-undo"></i> Restaurar Padrão</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="cardapio-crud" class="admin-tab-content">
+                <div class="glass-card-solid rounded-2xl p-6 border border-red-800/40">
+                    <div class="flex justify-between items-center mb-5 flex-wrap gap-3">
+                        <h3 class="text-xl font-semibold text-red-400"><i class="fas fa-utensils mr-2"></i> Gerenciar Cardápio</h3>
+                        <button onclick="adicionarNovoProduto()" class="bg-red-700/80 hover:bg-red-600 px-5 py-2 rounded-full text-sm flex items-center gap-2"><i class="fas fa-plus"></i> Novo Item</button>
+                    </div>
+                    <div id="admin-produtos-list" class="space-y-4 max-h-[55vh] overflow-y-auto pr-2"></div>
+                    <button onclick="salvarCardapioCompleto()" class="w-full bg-red-700 hover:bg-red-600 py-3 rounded-xl font-bold mt-6 flex items-center justify-center gap-2"><i class="fas fa-save"></i> Salvar Cardápio</button>
+                </div>
+            </div>
+
+            <div id="taxas-regioes" class="admin-tab-content">
+                <div class="glass-card-solid rounded-2xl p-6 border border-red-800/40">
+                    <h3 class="text-xl font-semibold text-red-400 mb-4"><i class="fas fa-map-marked-alt"></i> Regiões e Taxas de Entrega</h3>
+                    <div id="taxas-container" class="space-y-3"></div>
+                    <button onclick="adicionarRegiaoTaxa()" class="mt-4 bg-white/10 py-2 px-5 rounded-full text-sm flex items-center gap-2"><i class="fas fa-plus"></i> Adicionar Região</button>
+                    <button onclick="salvarTaxasEntrega()" class="w-full bg-emerald-700 py-3 rounded-xl font-bold mt-5 flex items-center justify-center gap-2"><i class="fas fa-save"></i> Salvar Frete</button>
+                </div>
+            </div>
+
+            <div id="cidades" class="admin-tab-content">
+                <div class="glass-card-solid rounded-2xl p-6 border border-red-800/40">
+                    <h3 class="text-xl font-semibold text-red-400 mb-5"><i class="fas fa-city"></i> Cidades para Entrega</h3>
+                    <p class="text-white/60 text-sm mb-4">Adicione ou remova as cidades que aparecerão no cadastro do cliente. (Cidades conhecidas geram taxas automaticamente)</p>
+                    <div id="lista-cidades-admin" class="space-y-2 mb-4"></div>
+                    <div class="flex gap-2">
+                        <input type="text" id="nova-cidade" placeholder="Nome da cidade" class="flex-1 rounded-xl p-2 bg-black/50 text-white">
+                        <button onclick="adicionarCidadeAdmin()" class="bg-red-700 hover:bg-red-600 px-4 py-2 rounded-xl"><i class="fas fa-plus"></i> Adicionar</button>
+                    </div>
+                    <button onclick="salvarCidades()" class="mt-5 bg-emerald-700 hover:bg-emerald-600 py-2 px-5 rounded-xl font-bold w-full flex items-center justify-center gap-2"><i class="fas fa-save"></i> Salvar Cidades</button>
+                </div>
+            </div>
+
+            <!-- Histórico de Pedidos com filtro de data única e relatórios fixos -->
+            <div id="pedidos-list" class="admin-tab-content">
+                <div class="glass-card-solid rounded-2xl p-6 border border-red-800/40">
+                    <h3 class="text-xl font-semibold text-red-400 mb-3"><i class="fas fa-history"></i> Histórico de Pedidos</h3>
+                    <div class="flex flex-wrap gap-2 mb-5 items-center justify-between">
+                        <div class="flex gap-2">
+                            <input type="date" id="filtro-data-unica" class="bg-[#2d2d35] border border-red-800 rounded-lg p-2 text-white text-sm">
+                            <button onclick="filtrarPorDataUnica()" class="bg-red-700 hover:bg-red-600 px-4 py-2 rounded-lg text-sm"><i class="fas fa-search"></i> Filtrar</button>
+                            <button onclick="limparFiltroDataUnica()" class="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded-lg text-sm"><i class="fas fa-undo"></i> Limpar</button>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="gerarRelatorio('dia')" class="bg-emerald-700 hover:bg-emerald-600 px-4 py-2 rounded-lg text-sm"><i class="fas fa-sun"></i> Relatório do Dia</button>
+                            <button onclick="gerarRelatorio('mes')" class="bg-emerald-700 hover:bg-emerald-600 px-4 py-2 rounded-lg text-sm"><i class="fas fa-calendar-week"></i> Relatório do Mês</button>
+                            <button onclick="gerarRelatorio('ano')" class="bg-emerald-700 hover:bg-emerald-600 px-4 py-2 rounded-lg text-sm"><i class="fas fa-calendar-alt"></i> Relatório do Ano</button>
+                        </div>
+                    </div>
+                    <div id="relatorio-container" class="relatorio-container" style="display: none;"></div>
+                    <div id="historico-pedidos" class="space-y-4 max-h-[55vh] overflow-y-auto"></div>
+                </div>
+            </div>
+
+            <div id="entregadores" class="admin-tab-content">
+                <div class="glass-card-solid rounded-2xl p-6 border border-red-800/40">
+                    <h3 class="text-xl font-semibold text-red-400 mb-5"><i class="fas fa-users-cog"></i> Gerenciar Entregadores</h3>
+                    <p class="text-white/60 text-sm mb-4">Adicione, edite ou remova os logins e senhas dos entregadores. (WhatsApp para envio automático do recibo)</p>
+                    <div id="lista-entregadores-admin" class="space-y-2 mb-4"></div>
+                    <div class="flex flex-wrap gap-2 mb-4">
+                        <input type="text" id="novo-login-entregador" placeholder="Login" class="flex-1 rounded-xl p-2 bg-black/50 text-white">
+                        <input type="text" id="nova-senha-entregador" placeholder="Senha" class="flex-1 rounded-xl p-2 bg-black/50 text-white">
+                        <input type="tel" id="novo-whats-entregador" placeholder="WhatsApp (com DDD)" class="flex-1 rounded-xl p-2 bg-black/50 text-white">
+                        <button onclick="adicionarEntregadorAdmin()" class="bg-red-700 hover:bg-red-600 px-4 py-2 rounded-xl"><i class="fas fa-plus"></i> Adicionar</button>
+                    </div>
+                    <button onclick="salvarEntregadores()" class="mt-5 bg-emerald-700 hover:bg-emerald-600 py-2 px-5 rounded-xl font-bold w-full flex items-center justify-center gap-2"><i class="fas fa-save"></i> Salvar Entregadores</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAINEL ENTREGADOR -->
+    <div id="entregador-panel" class="fixed inset-0 z-50 bg-[#2a2a35] overflow-y-auto hidden p-5">
+        <div class="max-w-6xl mx-auto">
+            <div class="flex justify-between items-center border-b border-yellow-600/40 pb-4 mb-7">
+                <div class="flex items-center gap-3"><i class="fas fa-motorcycle text-yellow-400 text-2xl"></i><h2 class="text-2xl font-bold tracking-tight text-white">Área do Entregador</h2></div>
+                <button onclick="fecharEntregador()" class="text-white/50 hover:text-yellow-400 text-3xl">&times;</button>
+            </div>
+            <div class="flex flex-wrap gap-3 mb-7 border-b border-white/15 pb-4">
+                <button onclick="switchEntregadorTab('pedidos-disponiveis')" class="entregador-tab-btn px-5 py-2 rounded-full bg-yellow-900/40 text-yellow-400 font-semibold flex items-center gap-2"><i class="fas fa-list"></i> Ver pedidos disponíveis</button>
+                <button onclick="switchEntregadorTab('minhas-entregas')" class="entregador-tab-btn px-5 py-2 rounded-full text-white/80 hover:text-white flex items-center gap-2"><i class="fas fa-tasks"></i> Minhas entregas</button>
+            </div>
+            <div id="pedidos-disponiveis" class="entregador-tab-content active">
+                <div class="glass-card-solid rounded-2xl p-6 border border-yellow-600/40">
+                    <h3 class="text-xl font-semibold text-yellow-400 mb-4"><i class="fas fa-truck"></i> Pedidos para Entrega</h3>
+                    <div id="lista-pedidos-entregador" class="space-y-4 max-h-[55vh] overflow-y-auto"></div>
+                </div>
+            </div>
+            <div id="minhas-entregas" class="entregador-tab-content">
+                <div class="glass-card-solid rounded-2xl p-6 border border-yellow-600/40">
+                    <h3 class="text-xl font-semibold text-yellow-400 mb-4"><i class="fas fa-check-circle"></i> Pedidos que estou entregando</h3>
+                    <div id="lista-minhas-entregas" class="space-y-4 max-h-[55vh] overflow-y-auto"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL PARA VISUALIZAÇÃO DE IMAGENS -->
+    <div id="imageModal" class="image-modal" onclick="fecharModalImagem()">
+        <button class="close-modal" onclick="fecharModalImagem()">&times;</button>
+        <img id="modalImage" src="" alt="Ampliação">
+    </div>
+
+    <!-- MODAL DO HISTÓRICO DO CLIENTE -->
+    <div id="modal-historico-cliente" class="fixed inset-0 z-50 bg-[#3a3a45]/98 hidden items-end md:items-center justify-center p-4 backdrop-blur-md">
+        <div class="glass-card rounded-2xl w-full max-w-2xl border border-red-700/60 overflow-hidden shadow-2xl max-h-[85vh] flex flex-col">
+            <div class="bg-red-900/20 p-5 flex justify-between items-center border-b border-red-800/50">
+                <h2 class="text-2xl font-bold flex items-center gap-2"><i class="far fa-clock text-red-500"></i> Meus Pedidos</h2>
+                <button onclick="fecharModalHistoricoCliente()" class="text-3xl text-white/50 hover:text-red-400">&times;</button>
+            </div>
+            <div id="lista-pedidos-cliente" class="p-5 overflow-y-auto flex-1 space-y-4"></div>
+        </div>
+    </div>
+
+    <!-- APP PRINCIPAL CLIENTE -->
+    <div id="app-cliente" style="display: none;" class="pb-32">
+        <header class="sticky top-0 z-20 glass-card border-b border-red-800/40 px-5 py-4 flex justify-between items-center backdrop-blur-xl">
+            <div id="logo-container"></div>
+            <div class="flex items-center gap-3">
+                <div class="relative">
+                    <input type="text" id="input-pesquisa-pedido" placeholder="Buscar produto..." class="bg-black/40 border border-white/20 rounded-full py-1 px-3 text-sm text-white placeholder-white/40 w-40 focus:w-56 transition-all duration-300 outline-none focus:border-red-500" oninput="buscarProdutos(this.value)">
+                    <i class="fas fa-search absolute right-3 top-1/2 -translate-y-1/2 text-white/40 text-xs pointer-events-none"></i>
+                    <div id="sugestoes-pesquisa" class="search-suggestions"></div>
+                </div>
+                <i class="fas fa-arrow-left back-arrow text-xl" onclick="voltarTelaInicial()" title="Voltar para tela inicial"></i>
+                <i class="far fa-circle-user text-white/60 text-2xl user-icon" onclick="abrirHistoricoCliente()"></i>
+            </div>
+        </header>
+        <section class="px-5 mt-6"><div class="flex items-center gap-2 mb-3"><i class="fas fa-crown text-red-500 text-xs"></i><h2 class="text-[11px] uppercase font-bold tracking-wider text-white/60">✨ Seleção do Chef ✨</h2></div><div class="carousel-wrapper w-full overflow-hidden"><div id="carousel-destaques" class="carousel-track-animated"></div></div></section>
+        <section class="px-5 mt-8"><div class="flex gap-4 overflow-x-auto border-b border-white/15 pb-2 mb-4"><button onclick="filtrarCategoria(event, 'promocao')" class="filtro-btn text-sm font-bold text-red-500 border-b-2 border-red-500 pb-1.5">🔥 EXCLUSIVOS</button><button onclick="filtrarCategoria(event, 'combinados')" class="filtro-btn text-white/60">COMBINADOS</button><button onclick="filtrarCategoria(event, 'combos')" class="filtro-btn text-white/60">COMBOS</button><button onclick="filtrarCategoria(event, 'hot')" class="filtro-btn text-white/60">HOT ROLLS</button><button onclick="filtrarCategoria(event, 'bebidas')" class="filtro-btn text-white/60">BEBIDAS</button></div><div id="cardapio-container" class="space-y-4"></div></section>
+        <footer class="mt-12 p-6 border-t border-white/15 bg-black/30 text-center text-[11px] text-white/50"><p id="footer-endereco-text"><i class="fas fa-map-marker-alt text-red-400 mr-1"></i> Carregando...</p><p id="footer-contato-text" class="mt-1"><i class="fab fa-whatsapp text-green-500 mr-1"></i> WhatsApp</p><div class="w-full h-32 mt-3 rounded-xl overflow-hidden border border-white/15"><iframe id="mapa-iframe" class="w-full h-full border-0" title="Mapa"></iframe></div></footer>
+        <div class="fixed bottom-5 left-1/2 transform -translate-x-1/2 z-30"><button onclick="abrirModalCarrinho()" class="bg-gradient-to-r from-red-700 to-red-600 hover:from-red-800 hover:to-red-700 px-7 py-4 rounded-full shadow-2xl shadow-red-900/50 flex items-center gap-3 font-black text-white transition-all active:scale-95"><i class="fas fa-shopping-bag text-xl"></i> <span class="tracking-wide">MEU PEDIDO</span> <span id="total-carrinho-footer" class="bg-black/40 backdrop-blur-sm px-3 py-1 rounded-full text-sm">R$ 0,00</span></button></div>
+    </div>
+
+    <!-- MODAL CARRINHO -->
+    <div id="modal-carrinho" class="fixed inset-0 z-50 bg-[#3a3a45]/98 hidden items-end md:items-center justify-center p-4 backdrop-blur-md">
+        <div class="glass-card rounded-2xl w-full max-w-lg border border-red-700/60 overflow-hidden shadow-2xl">
+            <div class="bg-red-900/20 p-5 flex justify-between items-center border-b border-red-800/50">
+                <h2 class="text-2xl font-bold flex items-center gap-2"><i class="fas fa-receipt text-red-500"></i> Seu Carrinho</h2>
+                <button onclick="fecharModalCarrinho()" class="text-3xl text-white/50 hover:text-red-400">&times;</button>
+            </div>
+            <div class="p-5 max-h-[50vh] overflow-y-auto">
+                <div id="lista-carrinho" class="space-y-3"></div>
+                <div class="border-t border-white/15 pt-4 mt-3 space-y-2">
+                    <div class="flex flex-col gap-2">
+                        <label class="text-xs text-white/60 font-semibold uppercase">Tipo de entrega</label>
+                        <div class="flex gap-4">
+                            <label class="flex items-center gap-2 text-white/80 text-sm"><input type="radio" name="tipo-entrega" value="entrega" checked onchange="atualizarFrete()"> Entrega</label>
+                            <label class="flex items-center gap-2 text-white/80 text-sm"><input type="radio" name="tipo-entrega" value="retirada" onchange="atualizarFrete()"> Retirada</label>
+                        </div>
+                    </div>
+                    <div class="flex justify-between"><span>Subtotal</span><span id="subtotal-cart">R$ 0,00</span></div>
+                    <div class="flex justify-between text-red-400"><span><i class="fas fa-truck-fast"></i> Entrega</span><span id="frete-cart">R$ 0,00</span></div>
+                    <div id="taxa-maquininha-row" class="flex justify-between text-yellow-400 hidden"><span><i class="fas fa-credit-card"></i> Taxa maquininha</span><span id="taxa-maquininha-valor">R$ 0,00</span></div>
+                    <div class="flex justify-between text-xl font-black pt-2 border-t border-white/15"><span>TOTAL</span><span id="total-cart" class="text-red-500 text-2xl">R$ 0,00</span></div>
+                </div>
+                <div class="mt-5">
+                    <label class="text-xs text-white/60 font-semibold uppercase">Forma de pagamento</label>
+                    <select id="tipo-pagamento" class="w-full rounded-xl p-3 mt-1 text-white bg-[#4a4a55] border-red-800" onchange="atualizarTaxaMaquininha(); atualizarExibicaoPix()">
+                        <option value="PIX">📱 PIX</option>
+                        <option value="Cartão Crédito">💳 Cartão Crédito (acréscimo de R$ 3,00)</option>
+                        <option value="Cartão Débito">💳 Cartão Débito</option>
+                        <option value="Dinheiro">💵 Dinheiro</option>
+                    </select>
+                    <div id="pix-info-area" class="pix-info hidden">
+                        <div class="flex justify-between items-center"><span class="text-sm font-semibold text-white/90">Chave PIX:</span><button class="copy-btn" onclick="copiarPix()"><i class="far fa-copy"></i> Copiar</button></div>
+                        <code id="pix-chave" class="text-xs text-white/70 break-all"></code>
+                        <p class="text-[10px] text-white/50 mt-2">⚠️ Realize o pagamento via PIX e envie o comprovante após a confirmação do pedido.</p>
+                    </div>
+                </div>
+                <button onclick="finalizarPedido()" class="w-full btn-red-czk py-3.5 rounded-xl font-bold mt-6 flex items-center justify-center gap-2"><i class="fas fa-check-circle"></i> CONFIRMAR PEDIDO</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ---------- DADOS GLOBAIS ----------
+        let clienteAtual = null;
+        let carrinho = [];
+        let produtos = [
+            { id:1, nome:"Combo Prime CZK", preco:189, categoria:"promocao", img:"https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=300&q=80", desc:"Salmão trufado + caviar" },
+            { id:2, nome:"Nigiri Foie Gras", preco:48, categoria:"promocao", img:"https://images.unsplash.com/photo-1611143669185-af224c5e3252?w=300&q=80", desc:"Atum selado com foie gras" },
+            { id:3, nome:"Sunomono Premium", preco:29.9, categoria:"promocao", img:"https://images.unsplash.com/photo-1617196034796-73dfa7b1fd56?w=300&q=80", desc:"Pepino e gergelim" },
+            { id:4, nome:"Combinado Omakase", preco:210, categoria:"combinados", img:"https://images.unsplash.com/photo-1583623025817-d180a2221d0a?w=300&q=80", desc:"24 peças selecionadas" },
+            { id:5, nome:"Combo Galera VIP", preco:280, categoria:"combos", img:"https://images.unsplash.com/photo-1633478062482-790e3b5dd810?w=300&q=80", desc:"40 peças" },
+            { id:6, nome:"Hot Philadelphia", preco:45, categoria:"hot", img:"https://images.unsplash.com/photo-1559410545-0bdcd187e0a6?w=300&q=80", desc:"Cream cheese trufado" },
+            { id:7, nome:"Sake Premium", preco:120, categoria:"bebidas", img:"https://images.unsplash.com/photo-1608885898957-a599fb18de36?w=300&q=80", desc:"Garrafa 720ml" }
+        ];
+        let taxasEntrega = [];
+        let configEmpresa = { nome:"CZK MAKI", whatsapp:"5547999999999", cnpj:"12.345.678/0001-99", endereco:"Av. Atlântica, 1500 - Centro, BC", pix:"contato@czkmaki.com", mapaUrl:"https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3554.433728612716!2d-48.627732!3d-26.984715!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjbCsDU5JzA1LjAiUyA0OMKwMzcnMzkuOCJX!5e0!3m2!1spt-BR!2sbr!4v1625000000000" };
+        let logomarca = { texto: "CZK MAKI", estilo: "tracking-tighter", imagemBase64: null, subtitulo: "L'art culinaire japonais" };
+        let historicoPedidos = [];
+        let cidadesDisponiveis = ["Penha", "Piçarras", "Navegantes"];
+        let entregadores = [];
+        let adminLogado = false;
+        let entregadorLogado = null;
+        let filtroDataControle = null;
+        let filtroDataUnica = null;
+        let currentRelatorioTipo = null;
+        
+        // Mapa de bairros por cidade (será reconstruído dinamicamente a partir das taxas)
+        let bairrosPorCidade = {};
+
+        // ---------- FUNÇÕES DE SINCRONIZAÇÃO DE BAIRROS COM TAXAS ----------
+        function inicializarBairrosPadrao() {
+            const padrao = {
+                "Penha": ["Centro", "Armação", "Nossa Senhora de Fátima", "Praia Alegre", "Praia Grande", "Santa Lídia", "Gravatá", "São Cristóvão", "São Nicolau"],
+                "Piçarras": ["Centro", "Santo Antônio", "Itacolomi", "Nossa Senhora da Conceição", "Itajuba"],
+                "Navegantes": ["Gravatá", "Meia Praia", "Pedreiras", "São Domingos", "Centro"]
+            };
+            bairrosPorCidade = {};
+            for (let cidade in padrao) {
+                bairrosPorCidade[cidade] = [...padrao[cidade]];
+            }
+        }
+
+        function sincronizarBairrosComTaxas() {
+            inicializarBairrosPadrao();
+            for (let taxa of taxasEntrega) {
+                let partes = taxa.regiao.split(" - ");
+                if (partes.length === 2) {
+                    let cidade = partes[0].trim();
+                    let bairro = partes[1].trim();
+                    if (!bairrosPorCidade[cidade]) bairrosPorCidade[cidade] = [];
+                    if (!bairrosPorCidade[cidade].includes(bairro)) {
+                        bairrosPorCidade[cidade].push(bairro);
+                    }
+                }
+            }
+            for (let cidade in bairrosPorCidade) {
+                if (!cidadesDisponiveis.includes(cidade)) {
+                    cidadesDisponiveis.push(cidade);
+                }
+            }
+            atualizarSelectCidades();
+            if (clienteAtual && clienteAtual.cidade) {
+                atualizarBairros();
+            }
+        }
+
+        // Configurações de fundo
+        let bgConfig = { url: "https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?q=80&w=2070&auto=format", overlayColor1: "#1e1e23", overlayColor2: "#141419", overlayOpacity: 0.7, brightness: 0.35 };
+        const imagensGaleria = [
+            { nome: "Sushi Clássico", url: "https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?q=80&w=2070&auto=format" },
+            { nome: "Mesa Japonesa", url: "https://images.unsplash.com/photo-1617196034796-73dfa7b1fd56?q=80&w=2070&auto=format" },
+            { nome: "Interior Luxuoso", url: "https://images.unsplash.com/photo-1553621042-f6e147245754?q=80&w=2070&auto=format" },
+            { nome: "Salmão Fresco", url: "https://images.unsplash.com/photo-1611143669185-af224c5e3252?q=80&w=2070&auto=format" },
+            { nome: "Uramaki", url: "https://images.unsplash.com/photo-1559410545-0bdcd187e0a6?q=80&w=2070&auto=format" },
+            { nome: "Temaki", url: "https://images.unsplash.com/photo-1533622597524-a1215e26c0a2?q=80&w=2070&auto=format" }
+        ];
+
+        function voltarTelaInicial() { clienteAtual = null; carrinho = []; document.getElementById("app-cliente").style.display = "none"; document.getElementById("screen-auth").style.display = "flex"; document.getElementById("form-cliente").reset(); atualizarBairros(); }
+
+        function atualizarBairros() {
+            const cidadeSelect = document.getElementById("cliente-cidade");
+            const bairroSelect = document.getElementById("cliente-bairro");
+            const cidade = cidadeSelect.value;
+            bairroSelect.innerHTML = '<option value="" disabled selected>Selecione o bairro</option>';
+            if (cidade && bairrosPorCidade[cidade]) { 
+                bairrosPorCidade[cidade].forEach(bairro => { 
+                    const option = document.createElement("option"); 
+                    option.value = bairro; 
+                    option.textContent = bairro; 
+                    bairroSelect.appendChild(option); 
+                }); 
+            }
+        }
+
+        function buscarProdutos(termo) { const container = document.getElementById("sugestoes-pesquisa"); if (!container) return; if (termo.length < 2) { container.style.display = "none"; return; } const termoLower = termo.toLowerCase(); const resultados = produtos.filter(p => p.nome.toLowerCase().includes(termoLower) || p.desc.toLowerCase().includes(termoLower)); if (resultados.length === 0) { container.style.display = "none"; return; } container.innerHTML = resultados.map(p => `<div class="suggestion-item" onclick="selecionarProduto(${p.id})"><strong>${p.nome}</strong> - R$ ${p.preco.toFixed(2)}</div>`).join(''); container.style.display = "block"; }
+        function selecionarProduto(id) { const prod = produtos.find(p => p.id === id); if (prod) { const existente = carrinho.find(item => item.id === prod.id); if (existente) { existente.quantidade += 1; } else { carrinho.push({ ...prod, quantidade: 1 }); } atualizarTotal(); document.getElementById("sugestoes-pesquisa").style.display = "none"; document.getElementById("input-pesquisa-pedido").value = ""; const toast = document.createElement("div"); toast.innerText = `✅ ${prod.nome} adicionado ao carrinho!`; toast.style.position = "fixed"; toast.style.bottom = "20px"; toast.style.left = "50%"; toast.style.transform = "translateX(-50%)"; toast.style.backgroundColor = "#22c55e"; toast.style.color = "white"; toast.style.padding = "10px 20px"; toast.style.borderRadius = "40px"; toast.style.fontSize = "14px"; toast.style.zIndex = "9999"; toast.style.fontWeight = "bold"; document.body.appendChild(toast); setTimeout(() => toast.remove(), 2000); } }
+        document.addEventListener("click", function(e) { const searchContainer = document.querySelector(".relative"); if (searchContainer && !searchContainer.contains(e.target)) document.getElementById("sugestoes-pesquisa").style.display = "none"; });
+
+        // Funções de fundo (resumidas)
+        function trocarFundoRapido(url) { bgConfig.url = url; document.getElementById("bg-url").value = url; aplicarFundo(); localStorage.setItem("czk_bg_config", JSON.stringify(bgConfig)); const preview = document.getElementById("preview-bg-img"); if (preview) preview.src = url; }
+        function renderizarGaleriaFundo() { const container = document.getElementById("bg-gallery-container"); if (!container) return; container.innerHTML = imagensGaleria.map(img => `<div class="bg-thumb" onclick="trocarFundoRapido('${img.url}')" title="${img.nome}"><img src="${img.url}" alt="${img.nome}" loading="lazy"></div>`).join(''); }
+        function carregarConfigFundo() { const saved = localStorage.getItem("czk_bg_config"); if (saved) bgConfig = JSON.parse(saved); aplicarFundo(); document.getElementById("bg-url").value = bgConfig.url; document.getElementById("overlay-color1").value = bgConfig.overlayColor1; document.getElementById("overlay-color2").value = bgConfig.overlayColor2; document.getElementById("overlay-opacity").value = bgConfig.overlayOpacity; document.getElementById("opacity-value").innerText = bgConfig.overlayOpacity; document.getElementById("bg-brightness").value = bgConfig.brightness; document.getElementById("brightness-value").innerText = bgConfig.brightness; const previewImg = document.getElementById("preview-bg-img"); if (previewImg) previewImg.src = bgConfig.url; }
+        function hexToRgba(hex, opacity) { let r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16); return `rgba(${r},${g},${b},${opacity})`; }
+        function aplicarFundo() { const bgImg = document.getElementById("dynamic-bg"); const overlay = document.getElementById("dynamic-overlay"); if (bgImg) { bgImg.src = bgConfig.url; bgImg.style.filter = `brightness(${bgConfig.brightness}) contrast(1.15)`; } if (overlay) { const c1 = hexToRgba(bgConfig.overlayColor1, bgConfig.overlayOpacity); const c2 = hexToRgba(bgConfig.overlayColor2, bgConfig.overlayOpacity); overlay.style.background = `linear-gradient(135deg, ${c1}, ${c2})`; } }
+        function salvarConfigFundo() { const url = document.getElementById("bg-url").value.trim(); if (url) bgConfig.url = url; bgConfig.overlayColor1 = document.getElementById("overlay-color1").value; bgConfig.overlayColor2 = document.getElementById("overlay-color2").value; bgConfig.overlayOpacity = parseFloat(document.getElementById("overlay-opacity").value); bgConfig.brightness = parseFloat(document.getElementById("bg-brightness").value); localStorage.setItem("czk_bg_config", JSON.stringify(bgConfig)); aplicarFundo(); const preview = document.getElementById("preview-bg-img"); if (preview) preview.src = bgConfig.url; alert("Configuração de fundo salva e aplicada!"); }
+        function resetarFundoPadrao() { bgConfig = { url: "https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?q=80&w=2070&auto=format", overlayColor1: "#1e1e23", overlayColor2: "#141419", overlayOpacity: 0.7, brightness: 0.35 }; localStorage.setItem("czk_bg_config", JSON.stringify(bgConfig)); aplicarFundo(); document.getElementById("bg-url").value = bgConfig.url; document.getElementById("overlay-color1").value = bgConfig.overlayColor1; document.getElementById("overlay-color2").value = bgConfig.overlayColor2; document.getElementById("overlay-opacity").value = bgConfig.overlayOpacity; document.getElementById("opacity-value").innerText = bgConfig.overlayOpacity; document.getElementById("bg-brightness").value = bgConfig.brightness; document.getElementById("brightness-value").innerText = bgConfig.brightness; const preview = document.getElementById("preview-bg-img"); if (preview) preview.src = bgConfig.url; alert("Fundo restaurado para o padrão!"); }
+        function aplicarBgUrl() { const url = document.getElementById("bg-url").value.trim(); if (url) { bgConfig.url = url; aplicarFundo(); const preview = document.getElementById("preview-bg-img"); if (preview) preview.src = url; alert("Imagem de fundo atualizada (clique em Salvar Fundo para persistir)"); } else { alert("Insira uma URL válida."); } }
+        document.getElementById("upload-bg")?.addEventListener("change", function(e) { if (e.target.files.length > 0) { const reader = new FileReader(); reader.onload = function(ev) { const imgUrl = ev.target.result; document.getElementById("bg-url").value = imgUrl; bgConfig.url = imgUrl; aplicarFundo(); const preview = document.getElementById("preview-bg-img"); if (preview) preview.src = imgUrl; alert("Imagem carregada. Clique em 'Salvar Fundo' para persistir."); }; reader.readAsDataURL(e.target.files[0]); } });
+        function atualizarValores() { document.getElementById("opacity-value").innerText = document.getElementById("overlay-opacity").value; document.getElementById("brightness-value").innerText = document.getElementById("bg-brightness").value; }
+        document.getElementById("overlay-opacity")?.addEventListener("input", atualizarValores); document.getElementById("bg-brightness")?.addEventListener("input", atualizarValores);
+
+        // Cidades
+        function carregarCidades() { const salvas = localStorage.getItem("czk_cidades"); if (salvas) cidadesDisponiveis = JSON.parse(salvas); else { cidadesDisponiveis = ["Penha", "Piçarras", "Navegantes"]; localStorage.setItem("czk_cidades", JSON.stringify(cidadesDisponiveis)); } atualizarSelectCidades(); renderizarCidadesAdmin(); }
+        function atualizarSelectCidades() { const select = document.getElementById("cliente-cidade"); if (!select) return; select.innerHTML = '<option value="" disabled selected>Selecione a cidade</option>'; cidadesDisponiveis.forEach(cidade => { select.innerHTML += `<option value="${cidade}">${cidade}</option>`; }); }
+        function renderizarCidadesAdmin() { const container = document.getElementById("lista-cidades-admin"); if (!container) return; container.innerHTML = cidadesDisponiveis.map((cidade, idx) => `<div class="cidade-item"><input type="text" value="${cidade}" id="cidade-${idx}" class="flex-1 rounded-xl p-2 bg-black/50 text-white"><button onclick="removerCidadeAdmin(${idx})" class="bg-red-700 hover:bg-red-600 px-3 py-2 rounded-xl"><i class="fas fa-trash-alt"></i></button></div>`).join(''); }
+        function adicionarCidadeAdmin() { const nova = document.getElementById("nova-cidade").value.trim(); if (nova === "") return; if (cidadesDisponiveis.includes(nova)) { alert("Cidade já existe."); return; } cidadesDisponiveis.push(nova); if (bairrosPorCidade[nova]) { bairrosPorCidade[nova].forEach(bairro => { const regiao = `${nova} - ${bairro}`; if (!taxasEntrega.some(t => t.regiao === regiao)) { taxasEntrega.push({ regiao: regiao, valor: 8 }); } }); salvarTaxasEntrega(); alert(`Cidade ${nova} adicionada e taxas para seus bairros foram incluídas.`); } else { alert(`Cidade ${nova} adicionada. Por favor, cadastre os bairros manualmente na aba "Taxas".`); } renderizarCidadesAdmin(); document.getElementById("nova-cidade").value = ""; atualizarSelectCidades(); renderTaxasAdmin(); sincronizarBairrosComTaxas(); }
+        function removerCidadeAdmin(idx) { const cidadeRemovida = cidadesDisponiveis[idx]; cidadesDisponiveis.splice(idx, 1); taxasEntrega = taxasEntrega.filter(t => !t.regiao.startsWith(cidadeRemovida + " - ")); salvarTaxasEntrega(); renderizarCidadesAdmin(); atualizarSelectCidades(); renderTaxasAdmin(); sincronizarBairrosComTaxas(); alert(`Cidade ${cidadeRemovida} removida e suas taxas também.`); }
+        function salvarCidades() { const inputs = document.querySelectorAll("#lista-cidades-admin input"); const novasCidades = []; inputs.forEach(input => { if (input.value.trim()) novasCidades.push(input.value.trim()); }); if (novasCidades.length === 0) { alert("É necessário ter pelo menos uma cidade."); return; } cidadesDisponiveis = [...novasCidades]; localStorage.setItem("czk_cidades", JSON.stringify(cidadesDisponiveis)); atualizarSelectCidades(); alert("Cidades salvas com sucesso!"); sincronizarBairrosComTaxas(); }
+
+        function enviarNotificacaoEntrega(whatsapp, nomeCliente) { let numero = whatsapp.replace(/\D/g, ''); if (!numero.startsWith('55')) numero = '55' + numero; const mensagem = `🍣 *${configEmpresa.nome}* 🍣\n\nOlá *${nomeCliente}*, seu pedido já saiu para entrega! 🛵\n⏱️ *Estimativa de chegada:* 15 a 30 minutos.\n\nAgradecemos pela preferência! ❤️\n\n*CZK MAKI - Alta Gastronomia Japonesa*`; window.open(`https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`, '_blank'); }
+
+        function obterDataAtualFormatada() { const hoje = new Date(); const dia = hoje.getDate().toString().padStart(2,'0'); const mes = (hoje.getMonth()+1).toString().padStart(2,'0'); const ano = hoje.getFullYear(); return `${dia}/${mes}/${ano}`; }
+
+        function renderHistorico() { 
+            let pedidosFiltrados = historicoPedidos; 
+            if (filtroDataUnica) { 
+                const dataObj = new Date(filtroDataUnica); 
+                const dia = dataObj.getDate().toString().padStart(2,'0'); 
+                const mes = (dataObj.getMonth()+1).toString().padStart(2,'0'); 
+                const ano = dataObj.getFullYear(); 
+                const dataStr = `${dia}/${mes}/${ano}`; 
+                pedidosFiltrados = historicoPedidos.filter(p => p.data === dataStr); 
+            } 
+            const container = document.getElementById("historico-pedidos"); 
+            if (!container) return; 
+            if (pedidosFiltrados.length === 0) { container.innerHTML = "<p class='text-center text-white/50'>Nenhum pedido encontrado para o filtro selecionado.</p>"; return; } 
+            container.innerHTML = pedidosFiltrados.map((p, idx) => `<div class="bg-black/40 p-4 rounded-xl border border-red-800/50"><div class="flex justify-between flex-wrap gap-2 border-b border-white/15 pb-2 mb-2"><p class="text-white font-bold"><i class="fas fa-user"></i> ${p.clienteNome || p.cliente}</p><p class="text-sm text-white/60"><i class="far fa-calendar-alt"></i> ${p.data} às ${p.hora}</p></div><div class="grid md:grid-cols-2 gap-3 text-sm"><div><p><i class="fab fa-whatsapp text-green-400"></i> ${p.whatsapp}</p><p><i class="fas fa-map-marker-alt text-red-400"></i> ${p.endereco}, ${p.cidade || ""}</p><p><i class="fas fa-credit-card"></i> Pagamento: ${p.metodo}</p></div><div><p class="font-semibold">Itens:</p><ul class="text-xs text-white/70 list-disc list-inside">${p.itens.map(item => `<li>${item}</li>`).join('')}</ul><p class="font-bold text-red-400 mt-2">Total: R$ ${p.total.toFixed(2)}</p><button onclick="enviarNotificacaoEntrega('${p.whatsapp}', '${p.clienteNome || p.cliente}')" class="btn-entrega text-white px-3 py-1 rounded-lg text-xs mt-2 flex items-center gap-1"><i class="fas fa-motorcycle"></i> Saindo para entrega</button></div></div></div>`).join(''); 
+        }
+
+        function filtrarPorDataUnica() { 
+            const dataInput = document.getElementById("filtro-data-unica").value; 
+            if (!dataInput) { alert("Selecione uma data."); return; } 
+            filtroDataUnica = dataInput; 
+            renderHistorico(); 
+        }
+        function limparFiltroDataUnica() { filtroDataUnica = null; document.getElementById("filtro-data-unica").value = ""; renderHistorico(); }
+
+        // Função para obter os produtos mais pedidos em um conjunto de pedidos
+        function obterProdutosMaisPedidos(pedidos) {
+            const contagem = {};
+            for (let pedido of pedidos) {
+                if (pedido.itensOriginais) {
+                    for (let item of pedido.itensOriginais) {
+                        const nome = item.nome;
+                        const qtd = item.quantidade;
+                        contagem[nome] = (contagem[nome] || 0) + qtd;
+                    }
+                } else {
+                    // Fallback para itens em formato string (menos confiável)
+                    for (let itemStr of pedido.itens) {
+                        const match = itemStr.match(/(.+?) x(\d+)/);
+                        if (match) {
+                            const nome = match[1].trim();
+                            const qtd = parseInt(match[2]);
+                            contagem[nome] = (contagem[nome] || 0) + qtd;
+                        }
+                    }
+                }
+            }
+            const ordenados = Object.entries(contagem).sort((a,b) => b[1] - a[1]);
+            return ordenados;
+        }
+
+        // Função para gerar recibo detalhado e enviar via WhatsApp
+        function enviarReciboRelatorio(tipo, pedidosFiltrados, titulo) {
+            const produtosMaisPedidos = obterProdutosMaisPedidos(pedidosFiltrados);
+            const totalPedidos = pedidosFiltrados.length;
+            const valorTotal = pedidosFiltrados.reduce((acc, p) => acc + p.total, 0);
+            let listaProdutos = "";
+            produtosMaisPedidos.forEach(([nome, qtd], idx) => {
+                listaProdutos += `${idx+1}º - ${nome} (${qtd} unidades)\n`;
+            });
+            if (listaProdutos === "") listaProdutos = "Nenhum produto encontrado.";
+            
+            const mensagem = `📊 *RELATÓRIO DETALHADO - ${titulo}* 📊\n\n` +
+                `📅 Período: ${titulo}\n` +
+                `🧾 Total de pedidos: ${totalPedidos}\n` +
+                `💰 Valor total: R$ ${valorTotal.toFixed(2)}\n` +
+                `🍣 *Produtos mais pedidos:*\n${listaProdutos}\n` +
+                `📌 *Detalhes dos pedidos:*\n` +
+                pedidosFiltrados.map(p => `• Pedido #${p.id} - ${p.clienteNome} - R$ ${p.total.toFixed(2)} - ${p.endereco}, ${p.cidade}`).join("\n") +
+                `\n\nEnviado automaticamente pelo sistema CZK MAKI.`;
+            
+            const numero = configEmpresa.whatsapp.replace(/\D/g, '');
+            const numeroLimpo = numero.startsWith('55') ? numero : '55' + numero;
+            window.open(`https://wa.me/${numeroLimpo}?text=${encodeURIComponent(mensagem)}`, '_blank');
+        }
+
+        // Relatórios fixos (sem timeout)
+        function gerarRelatorio(tipo) {
+            const hoje = new Date(); 
+            const ano = hoje.getFullYear(); 
+            const mes = hoje.getMonth(); 
+            let pedidosFiltrados = []; 
+            let titulo = ""; 
+            if (tipo === "dia") { 
+                const dataStr = obterDataAtualFormatada(); 
+                pedidosFiltrados = historicoPedidos.filter(p => p.data === dataStr); 
+                titulo = `Relatório do Dia (${dataStr})`; 
+            } else if (tipo === "mes") { 
+                pedidosFiltrados = historicoPedidos.filter(p => { const [dia, mesP, anoP] = p.data.split('/'); return parseInt(mesP) === (mes+1) && parseInt(anoP) === ano; }); 
+                titulo = `Relatório do Mês (${(mes+1).toString().padStart(2,'0')}/${ano})`; 
+            } else if (tipo === "ano") { 
+                pedidosFiltrados = historicoPedidos.filter(p => { const [dia, mesP, anoP] = p.data.split('/'); return parseInt(anoP) === ano; }); 
+                titulo = `Relatório do Ano (${ano})`; 
+            } 
+            const qtd = pedidosFiltrados.length; 
+            const total = pedidosFiltrados.reduce((acc, p) => acc + p.total, 0); 
+            const media = qtd > 0 ? total / qtd : 0; 
+            const container = document.getElementById("relatorio-container");
+            container.style.display = "block";
+            container.innerHTML = `
+                <button class="fechar-relatorio" onclick="fecharRelatorio()">&times;</button>
+                <div class="text-white">
+                    <h4 class="font-bold text-lg mb-2">${titulo}</h4>
+                    <p><i class="fas fa-chart-line"></i> Total de pedidos: ${qtd}</p>
+                    <p><i class="fas fa-dollar-sign"></i> Valor total: R$ ${total.toFixed(2)}</p>
+                    <p><i class="fas fa-calculator"></i> Ticket médio: R$ ${media.toFixed(2)}</p>
+                    <button onclick="enviarReciboRelatorio('${tipo}', ${JSON.stringify(pedidosFiltrados).replace(/"/g, '&quot;')}, '${titulo}')" class="mt-3 bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2"><i class="fab fa-whatsapp"></i> Enviar recibo detalhado</button>
+                </div>
+            `;
+            // Armazenar os pedidos filtrados globalmente para uso no envio
+            window.ultimoRelatorioPedidos = pedidosFiltrados;
+            window.ultimoRelatorioTitulo = titulo;
+            window.ultimoRelatorioTipo = tipo;
+            currentRelatorioTipo = tipo;
+        }
+        
+        function fecharRelatorio() {
+            const container = document.getElementById("relatorio-container");
+            container.style.display = "none";
+            currentRelatorioTipo = null;
+        }
+        
+        // Adaptar a função de envio para usar os dados armazenados
+        window.enviarReciboRelatorio = function(tipo, pedidosJson, titulo) {
+            // Se receber diretamente os parâmetros, usa-os
+            let pedidos = pedidosJson;
+            if (typeof pedidosJson === 'string') {
+                try {
+                    pedidos = JSON.parse(pedidosJson);
+                } catch(e) { pedidos = window.ultimoRelatorioPedidos || []; }
+            }
+            if (!pedidos.length && window.ultimoRelatorioPedidos) pedidos = window.ultimoRelatorioPedidos;
+            if (!titulo && window.ultimoRelatorioTitulo) titulo = window.ultimoRelatorioTitulo;
+            if (!pedidos.length) { alert("Nenhum dado para gerar recibo."); return; }
+            const produtosMaisPedidos = obterProdutosMaisPedidos(pedidos);
+            const totalPedidos = pedidos.length;
+            const valorTotal = pedidos.reduce((acc, p) => acc + p.total, 0);
+            let listaProdutos = "";
+            produtosMaisPedidos.forEach(([nome, qtd], idx) => {
+                listaProdutos += `${idx+1}º - ${nome} (${qtd} unidades)\n`;
+            });
+            if (listaProdutos === "") listaProdutos = "Nenhum produto encontrado.";
+            
+            const mensagem = `📊 *RELATÓRIO DETALHADO - ${titulo}* 📊\n\n` +
+                `📅 Período: ${titulo}\n` +
+                `🧾 Total de pedidos: ${totalPedidos}\n` +
+                `💰 Valor total: R$ ${valorTotal.toFixed(2)}\n` +
+                `🍣 *Produtos mais pedidos:*\n${listaProdutos}\n` +
+                `📌 *Detalhes dos pedidos:*\n` +
+                pedidos.map(p => `• Pedido #${p.id} - ${p.clienteNome} - R$ ${p.total.toFixed(2)} - ${p.endereco}, ${p.cidade}`).join("\n") +
+                `\n\nEnviado automaticamente pelo sistema CZK MAKI.`;
+            
+            const numero = configEmpresa.whatsapp.replace(/\D/g, '');
+            const numeroLimpo = numero.startsWith('55') ? numero : '55' + numero;
+            window.open(`https://wa.me/${numeroLimpo}?text=${encodeURIComponent(mensagem)}`, '_blank');
+        };
+
+        function atualizarExibicaoPix() { const select = document.getElementById("tipo-pagamento"), pixArea = document.getElementById("pix-info-area"), pixChaveSpan = document.getElementById("pix-chave"); if (select.value === "PIX") { pixChaveSpan.innerText = configEmpresa.pix || "Nenhuma chave cadastrada"; pixArea.classList.remove("hidden"); } else { pixArea.classList.add("hidden"); } }
+        function copiarPix() { const chave = document.getElementById("pix-chave").innerText; if (!chave || chave === "Nenhuma chave cadastrada") { alert("Chave PIX não disponível."); return; } if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(chave).then(() => alert("Chave PIX copiada!")).catch(() => fallbackCopy(chave)); } else { fallbackCopy(chave); } }
+        function fallbackCopy(text) { const textarea = document.createElement("textarea"); textarea.value = text; document.body.appendChild(textarea); textarea.select(); document.execCommand("copy"); document.body.removeChild(textarea); alert("Chave PIX copiada!"); }
+
+        function getClienteId() { return clienteAtual ? clienteAtual.whats : null; }
+        function getPedidosDoCliente() { const clienteId = getClienteId(); if (!clienteId) return []; return historicoPedidos.filter(pedido => pedido.clienteId === clienteId); }
+        function salvarPedidoNoHistorico(pedido) { pedido.id = Date.now(); pedido.clienteId = getClienteId(); pedido.clienteNome = clienteAtual.nome; pedido.status = "Em preparo"; pedido.entregador = null; historicoPedidos.unshift(pedido); localStorage.setItem("czk_pedidos", JSON.stringify(historicoPedidos)); renderHistorico(); renderPedidosAtivos(); renderPedidosDisponiveis(); if (adminLogado && document.getElementById("admin-panel").style.display === "block") { exibirPopupNovoPedido(pedido.id); } }
+        function atualizarStatusPedido(pedidoId, novoStatus, entregadorLogin = null) { const pedido = historicoPedidos.find(p => p.id == pedidoId); if (pedido) { pedido.status = novoStatus; if (entregadorLogin !== null) pedido.entregador = entregadorLogin; localStorage.setItem("czk_pedidos", JSON.stringify(historicoPedidos)); renderPedidosAtivos(); renderHistorico(); renderPedidosDisponiveis(); renderMinhasEntregas(); renderControleEntregas(); } }
+        function finalizarPedidoAdmin(pedidoId) { atualizarStatusPedido(pedidoId, "Pedido finalizado"); alert("Pedido finalizado! Agora disponível para entregador."); }
+        function exibirPopupNovoPedido(pedidoId) { if (document.querySelector(".popup-pedido")) return; const popupDiv = document.createElement("div"); popupDiv.className = "popup-pedido"; popupDiv.innerHTML = `<div class="popup-pedido-content"><i class="fas fa-bell text-red-500 text-4xl mb-3"></i><h3 class="text-xl font-bold text-white mb-2">Novo Pedido!</h3><p class="text-white/70 mb-4">Um cliente acabou de realizar um pedido.</p><button class="btn-popup-verde" onclick="this.closest('.popup-pedido').remove();">Pedido recebido, em produção...</button></div>`; document.body.appendChild(popupDiv); popupDiv.querySelector("button").addEventListener("click", () => { atualizarStatusPedido(pedidoId, "Em produção"); popupDiv.remove(); }); }
+        function renderPedidosAtivos() { const container = document.getElementById("lista-pedidos-ativos"); if (!container) return; const ativos = historicoPedidos.filter(p => p.status === "Em preparo" || p.status === "Em produção"); if (ativos.length === 0) { container.innerHTML = "<p class='text-center text-white/50 py-4'>Nenhum pedido em andamento.</p>"; return; } container.innerHTML = ativos.map(p => `<div class="bg-black/40 p-4 rounded-xl border border-red-800/50"><div class="flex justify-between items-start flex-wrap gap-2"><div><p class="text-white font-bold"><i class="fas fa-user"></i> ${p.clienteNome}</p><p class="text-sm text-white/60"><i class="fas fa-map-marker-alt text-red-400"></i> ${p.endereco}, ${p.cidade || ""}</p><p class="text-sm text-white/60"><i class="fab fa-whatsapp text-green-400"></i> ${p.whatsapp}</p><p class="text-sm text-white/60"><i class="fas fa-credit-card"></i> Pagamento: ${p.metodo}</p><p class="text-xs text-yellow-400 font-bold mt-1">Status: ${p.status}</p></div><div><p class="font-bold text-red-400">R$ ${p.total.toFixed(2)}</p><button onclick="finalizarPedidoAdmin(${p.id})" class="bg-green-600 hover:bg-green-500 text-white px-4 py-1.5 rounded-lg text-sm mt-2 flex items-center gap-1"><i class="fas fa-check-double"></i> Finalizar Pedido</button></div></div><div class="mt-2 text-sm text-white/80"><strong>Itens:</strong><div class="text-xs text-white/60 mt-1 space-y-1">${p.itens.map(item => `• ${item}`).join('<br>')}</div></div></div>`).join(''); }
+        
+        function gerarReciboEntregador(login, dataReferencia = null) { const entregador = entregadores.find(e => e.login === login); if (!entregador) { alert("Entregador não encontrado."); return; } const hoje = dataReferencia ? dataReferencia : obterDataAtualFormatada(); const pedidosFiltrados = historicoPedidos.filter(p => p.entregador === login && p.status === "Saiu para entrega" && p.data === hoje); const totalEntregas = pedidosFiltrados.length; const totalTaxas = pedidosFiltrados.reduce((acc, p) => acc + (p.freteValor || 0), 0); const enderecosList = pedidosFiltrados.map(p => `• ${p.endereco} - ${p.cidade}`).join('\n'); const mensagem = `📄 *COMPROVANTE DE ENTREGAS* 📄\n\n*Entregador:* ${login}\n*Data:* ${hoje}\n*Total de entregas:* ${totalEntregas}\n*Total em taxas:* R$ ${totalTaxas.toFixed(2)}\n\n*Endereços entregues:*\n${enderecosList || 'Nenhum'}\n\nAgradecemos pelo trabalho! 🛵✨\n${configEmpresa.nome}`; if (entregador.whatsapp) { let numero = entregador.whatsapp.replace(/\D/g, ''); if (!numero.startsWith('55')) numero = '55' + numero; window.open(`https://wa.me/${numero}?text=${encodeURIComponent(mensagem)}`, '_blank'); } else { alert("Entregador não possui WhatsApp cadastrado. Copie o recibo manualmente:\n\n" + mensagem); } }
+
+        function aplicarFiltroDataControle() { const data = document.getElementById("filtro-data-controle").value; if (!data) { alert("Selecione uma data."); return; } const [ano, mes, dia] = data.split('-'); const dataFormatada = `${dia}/${mes}/${ano}`; filtroDataControle = dataFormatada; renderControleEntregas(); }
+        function limparFiltroDataControle() { filtroDataControle = null; document.getElementById("filtro-data-controle").value = ""; renderControleEntregas(); }
+
+        function renderControleEntregas() {
+            const container = document.getElementById("controle-entregadores-container");
+            if (!container) return;
+            const hoje = filtroDataControle ? filtroDataControle : obterDataAtualFormatada();
+            const entregadoresComPedidos = {};
+            entregadores.forEach(ent => { entregadoresComPedidos[ent.login] = { entregador: ent, pedidos: [] }; });
+            historicoPedidos.forEach(p => { if (p.status === "Saiu para entrega" && p.entregador && entregadoresComPedidos[p.entregador] && p.data === hoje) { entregadoresComPedidos[p.entregador].pedidos.push(p); } });
+            const activeEntregadores = Object.values(entregadoresComPedidos).filter(e => e.pedidos.length > 0);
+            if (activeEntregadores.length === 0) { container.innerHTML = "<p class='text-center text-white/50 py-4'>Nenhum entregador com pedidos em andamento na data selecionada.</p>"; return; }
+            let tabsHtml = `<div class="flex flex-wrap gap-2 mb-4 border-b border-white/20 pb-2">`;
+            let contentHtml = `<div class="relative">`;
+            activeEntregadores.forEach((item, idx) => {
+                const login = item.entregador.login;
+                const totalEntregasHoje = item.pedidos.length;
+                const totalTaxasHoje = item.pedidos.reduce((acc, p) => acc + (p.freteValor || 0), 0);
+                tabsHtml += `<button class="entregador-subtab ${idx === 0 ? 'active' : ''}" data-entregador="${login}"><i class="fas fa-motorcycle"></i> ${login} (${totalEntregasHoje} entregas - R$ ${totalTaxasHoje.toFixed(2)})</button>`;
+                contentHtml += `<div id="entregador-pedidos-${login}" class="entregador-pedidos ${idx === 0 ? 'active' : ''}">
+                    <div class="flex justify-between items-center bg-black/30 p-3 rounded-xl mb-3 flex-wrap gap-2">
+                        <div><span class="text-white font-bold">Entregas na data: ${totalEntregasHoje}</span><br><span class="text-white/80">Total taxas: R$ ${totalTaxasHoje.toFixed(2)}</span></div>
+                        <button onclick="gerarReciboEntregador('${login}', '${hoje}')" class="btn-recibo text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2"><i class="fab fa-whatsapp"></i> Enviar Recibo</button>
+                    </div>
+                    ${item.pedidos.map(p => `<div class="bg-black/40 p-4 rounded-xl border border-yellow-600/50 mb-3"><div class="flex justify-between items-start flex-wrap gap-2"><div><p class="text-white font-bold"><i class="fas fa-user"></i> ${p.clienteNome}</p><p class="text-sm text-white/60"><i class="fas fa-map-marker-alt text-red-400"></i> ${p.endereco}, ${p.cidade || ""}</p><p class="text-sm text-white/60"><i class="fab fa-whatsapp text-green-400"></i> ${p.whatsapp}</p><p class="text-sm text-white/60"><i class="fas fa-credit-card"></i> Pagamento: ${p.metodo}</p><p class="text-xs text-green-400 font-bold mt-1">Status: ${p.status}</p></div><div><p class="font-bold text-red-400">R$ ${p.total.toFixed(2)}</p><p class="text-xs text-yellow-400">Taxa entrega: R$ ${(p.freteValor || 0).toFixed(2)}</p></div></div><div class="mt-2 text-sm text-white/80"><strong>Itens:</strong><div class="text-xs text-white/60 mt-1 space-y-1">${p.itens.map(item => `• ${item}`).join('<br>')}</div></div></div>`).join('')}
+                </div>`;
+            });
+            tabsHtml += `</div>`;
+            contentHtml += `</div>`;
+            container.innerHTML = tabsHtml + contentHtml;
+            document.querySelectorAll('.entregador-subtab').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const login = btn.getAttribute('data-entregador');
+                    document.querySelectorAll('.entregador-subtab').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    document.querySelectorAll('.entregador-pedidos').forEach(div => div.classList.remove('active'));
+                    document.getElementById(`entregador-pedidos-${login}`).classList.add('active');
+                });
+            });
+        }
+
+        function exibirPopupNovoPedidoParaEntregador(pedidoId) { if (document.querySelector(".popup-pedido-entregador")) return; const pedido = historicoPedidos.find(p => p.id == pedidoId); if (!pedido) return; const popupDiv = document.createElement("div"); popupDiv.className = "popup-pedido"; popupDiv.innerHTML = `<div class="popup-pedido-content"><i class="fas fa-bell text-yellow-400 text-4xl mb-3"></i><h3 class="text-xl font-bold text-white mb-2">Novo Pedido Finalizado!</h3><p class="text-white/70 mb-4">Pedido #${pedido.id} está aguardando entrega.</p><button class="btn-popup-verde" id="btn-aceitar-popup">Aceitar entrega</button></div>`; document.body.appendChild(popupDiv); document.getElementById("btn-aceitar-popup").addEventListener("click", () => { aceitarEntregaEntregador(pedidoId); popupDiv.remove(); }); }
+        function renderPedidosDisponiveis() { const container = document.getElementById("lista-pedidos-entregador"); if (!container) return; const pedidosDisponiveis = historicoPedidos.filter(p => p.status === "Pedido finalizado"); if (pedidosDisponiveis.length === 0) { container.innerHTML = "<p class='text-center text-white/50 py-4'>Nenhum pedido disponível para entrega no momento.</p>"; return; } container.innerHTML = pedidosDisponiveis.map(p => `<div class="bg-black/40 p-4 rounded-xl border border-yellow-600/50"><div class="flex justify-between items-start flex-wrap gap-2"><div><p class="text-white font-bold"><i class="fas fa-user"></i> ${p.clienteNome || p.cliente}</p><p class="text-sm text-white/60"><i class="fas fa-map-marker-alt text-yellow-400"></i> ${p.endereco}, ${p.cidade || ""}</p><p class="text-sm text-white/60"><i class="fab fa-whatsapp text-green-400"></i> ${p.whatsapp}</p><p class="text-sm text-white/60"><i class="fas fa-credit-card"></i> Pagamento: ${p.metodo}</p><p class="text-xs text-yellow-400 font-bold mt-1">Status: ${p.status}</p></div><div><p class="font-bold text-red-400">R$ ${p.total.toFixed(2)}</p><button onclick="aceitarEntregaEntregador(${p.id})" class="btn-entrega text-white px-4 py-1.5 rounded-lg text-sm mt-2 flex items-center gap-1"><i class="fas fa-check-circle"></i> Aceitar entrega</button></div></div><div class="mt-2 text-sm text-white/80"><strong>Itens:</strong><div class="text-xs text-white/60 mt-1 space-y-1">${p.itens.map(item => `• ${item}`).join('<br>')}</div></div></div>`).join(''); }
+        function aceitarEntregaEntregador(pedidoId) { if (!entregadorLogado) { alert("Você precisa estar logado como entregador."); return; } const pedido = historicoPedidos.find(p => p.id == pedidoId); if (pedido && pedido.status === "Pedido finalizado") { atualizarStatusPedido(pedidoId, "Saiu para entrega", entregadorLogado); alert(`✅ Pedido #${pedidoId} aceito! Status: Saiu para entrega.`); enviarNotificacaoEntrega(pedido.whatsapp, pedido.clienteNome || pedido.cliente); renderMinhasEntregas(); } else { alert("Este pedido não está mais disponível."); } }
+        function renderMinhasEntregas() { const container = document.getElementById("lista-minhas-entregas"); if (!container) return; if (!entregadorLogado) { container.innerHTML = "<p class='text-center text-white/50 py-4'>Faça login para ver suas entregas.</p>"; return; } const minhasEntregas = historicoPedidos.filter(p => p.entregador === entregadorLogado && (p.status === "Saiu para entrega" || p.status === "Em preparo" || p.status === "Pedido finalizado")); if (minhasEntregas.length === 0) { container.innerHTML = "<p class='text-center text-white/50 py-4'>Você não possui entregas em andamento.</p>"; return; } container.innerHTML = minhasEntregas.map(p => `<div class="bg-black/40 p-4 rounded-xl border border-yellow-600/50"><div class="flex justify-between items-start flex-wrap gap-2"><div><p class="text-white font-bold"><i class="fas fa-user"></i> ${p.clienteNome}</p><p class="text-sm text-white/60"><i class="fas fa-map-marker-alt text-red-400"></i> ${p.endereco}, ${p.cidade || ""}</p><p class="text-sm text-white/60"><i class="fab fa-whatsapp text-green-400"></i> ${p.whatsapp}</p><p class="text-sm text-white/60"><i class="fas fa-credit-card"></i> Pagamento: ${p.metodo}</p><p class="text-xs text-green-400 font-bold mt-1">Status: ${p.status}</p></div><div><p class="font-bold text-red-400">R$ ${p.total.toFixed(2)}</p><p class="text-xs text-yellow-400">Taxa entrega: R$ ${(p.freteValor || 0).toFixed(2)}</p></div></div><div class="mt-2 text-sm text-white/80"><strong>Itens:</strong><div class="text-xs text-white/60 mt-1 space-y-1">${p.itens.map(item => `• ${item}`).join('<br>')}</div></div></div>`).join(''); }
+
+        // Entregadores - CRUD com WhatsApp
+        function carregarEntregadores() { const salvas = localStorage.getItem("czk_entregadores"); if (salvas) { entregadores = JSON.parse(salvas); } else { entregadores = [ { login: "entregador1", senha: "123456", whatsapp: "" }, { login: "entregador2", senha: "123456", whatsapp: "" }, { login: "entregador3", senha: "123456", whatsapp: "" } ]; localStorage.setItem("czk_entregadores", JSON.stringify(entregadores)); } renderizarEntregadoresAdmin(); }
+        function renderizarEntregadoresAdmin() { const container = document.getElementById("lista-entregadores-admin"); if (!container) return; container.innerHTML = entregadores.map((e, idx) => `<div class="flex flex-wrap gap-2 items-center mb-2"><input type="text" value="${e.login}" id="entregador-login-${idx}" class="flex-1 rounded-xl p-2 bg-black/50 text-white"><input type="text" value="${e.senha}" id="entregador-senha-${idx}" class="flex-1 rounded-xl p-2 bg-black/50 text-white"><input type="tel" value="${e.whatsapp || ''}" id="entregador-whats-${idx}" placeholder="WhatsApp" class="flex-1 rounded-xl p-2 bg-black/50 text-white"><button onclick="removerEntregadorAdmin(${idx})" class="bg-red-700 hover:bg-red-600 px-3 py-2 rounded-xl"><i class="fas fa-trash-alt"></i></button></div>`).join(''); }
+        function adicionarEntregadorAdmin() { const login = document.getElementById("novo-login-entregador").value.trim(); const senha = document.getElementById("nova-senha-entregador").value.trim(); const whats = document.getElementById("novo-whats-entregador").value.trim(); if (login === "" || senha === "") { alert("Preencha login e senha."); return; } entregadores.push({ login, senha, whatsapp: whats }); renderizarEntregadoresAdmin(); document.getElementById("novo-login-entregador").value = ""; document.getElementById("nova-senha-entregador").value = ""; document.getElementById("novo-whats-entregador").value = ""; }
+        function removerEntregadorAdmin(idx) { if (entregadores.length <= 1) { alert("É necessário ter pelo menos um entregador."); return; } entregadores.splice(idx, 1); renderizarEntregadoresAdmin(); }
+        function salvarEntregadores() { entregadores.forEach((e, idx) => { e.login = document.getElementById(`entregador-login-${idx}`).value.trim(); e.senha = document.getElementById(`entregador-senha-${idx}`).value.trim(); e.whatsapp = document.getElementById(`entregador-whats-${idx}`).value.trim(); }); localStorage.setItem("czk_entregadores", JSON.stringify(entregadores)); alert("Entregadores salvos com sucesso!"); }
+
+        // Login entregador
+        function abrirLoginEntregador() { document.getElementById("modal-entregador").style.display = "flex"; }
+        function fecharModalEntregador() { document.getElementById("modal-entregador").style.display = "none"; }
+        function validarEntregador() { const login = document.getElementById("login-entregador").value.trim(); const senha = document.getElementById("senha-entregador").value.trim(); const encontrado = entregadores.find(e => e.login === login && e.senha === senha); if (encontrado) { entregadorLogado = login; document.getElementById("modal-entregador").style.display = "none"; document.getElementById("entregador-panel").style.display = "block"; renderPedidosDisponiveis(); renderMinhasEntregas(); } else { alert("Login ou senha incorretos!"); } }
+        function fecharEntregador() { entregadorLogado = null; document.getElementById("entregador-panel").style.display = "none"; }
+        function switchEntregadorTab(tabId) { document.querySelectorAll(".entregador-tab-content").forEach(t => t.classList.remove("active")); document.getElementById(tabId).classList.add("active"); if (tabId === 'pedidos-disponiveis') renderPedidosDisponiveis(); if (tabId === 'minhas-entregas') renderMinhasEntregas(); }
+
+        // Taxas
+        function carregarTaxas() { 
+            const salvas = localStorage.getItem("czk_taxas"); 
+            if (salvas) { 
+                taxasEntrega = JSON.parse(salvas); 
+            } else { 
+                taxasEntrega = []; 
+                const cidadesBase = ["Penha", "Piçarras", "Navegantes"];
+                cidadesBase.forEach(cidade => {
+                    if (bairrosPorCidade[cidade]) {
+                        bairrosPorCidade[cidade].forEach(bairro => {
+                            taxasEntrega.push({ regiao: `${cidade} - ${bairro}`, valor: 8 });
+                        });
+                    }
+                });
+                localStorage.setItem("czk_taxas", JSON.stringify(taxasEntrega));
+            }
+            renderTaxasAdmin(); 
+            sincronizarBairrosComTaxas(); 
+        }
+        function renderTaxasAdmin() { const container = document.getElementById("taxas-container"); if (!container) return; container.innerHTML = taxasEntrega.map((t, idx) => `<div class="flex gap-2"><input class="flex-1 bg-black/60 border border-red-800 rounded p-2 text-white" value="${t.regiao}" onchange="taxasEntrega[${idx}].regiao=this.value"><input type="number" class="w-24 bg-black/60 border border-red-800 rounded p-2 text-white" value="${t.valor}" step="0.5" onchange="taxasEntrega[${idx}].valor=parseFloat(this.value)"><button onclick="taxasEntrega.splice(${idx},1);renderTaxasAdmin()" class="text-red-500 px-2"><i class="fas fa-trash-alt"></i></button></div>`).join(''); }
+        function adicionarRegiaoTaxa() { taxasEntrega.push({ regiao: "Nova região - Bairro", valor: 8 }); renderTaxasAdmin(); }
+        function salvarTaxasEntrega() { localStorage.setItem("czk_taxas", JSON.stringify(taxasEntrega)); sincronizarBairrosComTaxas(); renderTaxasAdmin(); alert("Taxas salvas e bairros atualizados na tela inicial!"); }
+
+        // Carrinho e pedido
+        function atualizarTaxaMaquininha() { const metodo = document.getElementById("tipo-pagamento").value; const taxaRow = document.getElementById("taxa-maquininha-row"); const taxaValorSpan = document.getElementById("taxa-maquininha-valor"); if (metodo === "Cartão Crédito") { taxaRow.classList.remove("hidden"); taxaValorSpan.innerText = "R$ 3,00"; } else { taxaRow.classList.add("hidden"); } atualizarFrete(); }
+        function atualizarFrete() { const sub = carrinho.reduce((s,i)=> s + (i.preco * i.quantidade), 0); const tipoEntrega = document.querySelector('input[name="tipo-entrega"]:checked'); const frete = tipoEntrega && tipoEntrega.value === 'entrega' ? calcularFrete() : 0; const metodo = document.getElementById("tipo-pagamento").value; const taxaMaquininha = (metodo === "Cartão Crédito") ? 3 : 0; document.getElementById("frete-cart").innerHTML = `R$ ${frete.toFixed(2)}`; document.getElementById("total-cart").innerHTML = `R$ ${(sub + frete + taxaMaquininha).toFixed(2)}`; }
+        function abrirModalCarrinho() { if(carrinho.length === 0) { alert("Carrinho vazio!"); return; } const lista = carrinho.map((item, idx) => `<div class="flex justify-between items-center border-b border-white/15 py-2"><div><span class="text-sm">${item.nome}</span><span class="text-xs text-white/40 ml-2">x${item.quantidade}</span></div><div><span class="font-mono text-red-300">R$ ${(item.preco * item.quantidade).toFixed(2)}</span><button onclick="removerItemCarrinho(${idx})" class="ml-3 text-red-400 text-xs"><i class="fas fa-trash-alt"></i></button></div></div>`).join(""); document.getElementById("lista-carrinho").innerHTML = lista; const sub = carrinho.reduce((s,i)=> s + (i.preco * i.quantidade), 0); const tipoEntrega = document.querySelector('input[name="tipo-entrega"]:checked'); const frete = tipoEntrega && tipoEntrega.value === 'entrega' ? calcularFrete() : 0; const metodo = document.getElementById("tipo-pagamento").value; const taxaMaquininha = (metodo === "Cartão Crédito") ? 3 : 0; document.getElementById("subtotal-cart").innerHTML = `R$ ${sub.toFixed(2)}`; document.getElementById("frete-cart").innerHTML = `R$ ${frete.toFixed(2)}`; document.getElementById("total-cart").innerHTML = `R$ ${(sub + frete + taxaMaquininha).toFixed(2)}`; atualizarTaxaMaquininha(); atualizarExibicaoPix(); document.getElementById("modal-carrinho").style.display = "flex"; }
+        function fecharModalCarrinho() { document.getElementById("modal-carrinho").style.display = "none"; }
+        window.removerItemCarrinho = function(idx) { carrinho.splice(idx, 1); atualizarTotal(); if (carrinho.length === 0) { fecharModalCarrinho(); } else { abrirModalCarrinho(); } };
+        function atualizarTotal() { const total = carrinho.reduce((acc, item) => acc + (item.preco * item.quantidade), 0); document.getElementById("total-carrinho-footer").innerText = `R$ ${total.toFixed(2)}`; }
+        function gerarLinkGoogleMaps(endereco, cidade) { return `https://maps.google.com/?q=${encodeURIComponent(`${endereco}, ${cidade}`)}`; }
+        function finalizarPedido() { if(carrinho.length === 0) return; const sub = carrinho.reduce((s,i)=> s + (i.preco * i.quantidade),0); const tipoEntrega = document.querySelector('input[name="tipo-entrega"]:checked'); const frete = tipoEntrega && tipoEntrega.value === 'entrega' ? calcularFrete() : 0; const metodo = document.getElementById("tipo-pagamento").value; let acrescimo = (metodo === "Cartão Crédito") ? 3.00 : 0; const totalFinal = sub + frete + acrescimo; const dataHora = new Date(); const dataFormatada = dataHora.toLocaleDateString('pt-BR'); const horaFormatada = dataHora.toLocaleTimeString('pt-BR'); const estimativa = tipoEntrega && tipoEntrega.value === 'retirada' ? "Retirada na loja" : "Estimativa: 30 - 50 minutos"; const itensMsg = carrinho.map(i => `• ${i.nome} x${i.quantidade} - R$ ${(i.preco * i.quantidade).toFixed(2)}`).join("\n"); const enderecoCompleto = `${clienteAtual.rua}, ${clienteAtual.numero} - ${clienteAtual.bairro}`; const cidade = clienteAtual.cidade; const mapsLink = gerarLinkGoogleMaps(enderecoCompleto, cidade); let msg = `🍣 *CZK MAKI - PEDIDO* 🍣\n\n*Cliente:* ${clienteAtual.nome}\n*WhatsApp:* ${clienteAtual.whats}\n`; if (tipoEntrega && tipoEntrega.value === 'retirada') { msg += `*Tipo:* Retirada na loja\n`; } else { msg += `*Endereço:* ${enderecoCompleto}, ${cidade}\n📍 *Maps:* ${mapsLink}\n`; } msg += `*Pagamento:* ${metodo}`; if (metodo === "PIX") msg += `\n*Chave PIX:* ${configEmpresa.pix || "Não cadastrada"}`; if (metodo === "Cartão Crédito") msg += `\n*Taxa maquininha:* R$ 3,00`; msg += `\n*Data/Hora:* ${dataFormatada} às ${horaFormatada}\n${estimativa}\n──────────────────\n*ITENS:*\n${itensMsg}\n──────────────────\n*Subtotal:* R$ ${sub.toFixed(2)}\n`; if (tipoEntrega && tipoEntrega.value === 'entrega') msg += `*Taxa Entrega:* R$ ${frete.toFixed(2)}\n`; if (acrescimo > 0) msg += `*Taxa maquininha:* R$ ${acrescimo.toFixed(2)}\n`; msg += `*TOTAL:* R$ ${totalFinal.toFixed(2)}`; enviarWhatsApp(configEmpresa.whatsapp, msg); const pedidoParaHistorico = { clienteId: getClienteId(), clienteNome: clienteAtual.nome, whatsapp: clienteAtual.whats, endereco: enderecoCompleto, cidade: cidade, itens: carrinho.map(i => `${i.nome} x${i.quantidade}`), itensOriginais: carrinho.map(i => ({ id: i.id, nome: i.nome, quantidade: i.quantidade, preco: i.preco })), total: totalFinal, freteValor: frete, metodo, data: dataFormatada, hora: horaFormatada, tipoEntrega: tipoEntrega ? tipoEntrega.value : 'entrega', status: "Em preparo" }; salvarPedidoNoHistorico(pedidoParaHistorico); carrinho = []; atualizarTotal(); fecharModalCarrinho(); alert("✅ Pedido enviado! O link do Maps foi enviado para o estabelecimento."); }
+        function enviarWhatsApp(numero, mensagem) { let numeroLimpo = numero.replace(/\D/g, ''); if (!numeroLimpo.startsWith('55')) numeroLimpo = '55' + numeroLimpo; window.open(`https://wa.me/${numeroLimpo}?text=${encodeURIComponent(mensagem)}`, '_blank'); }
+        function calcularFrete() { if(!clienteAtual) return 6; const endereco = `${clienteAtual.rua} ${clienteAtual.bairro} ${clienteAtual.cidade}`.toLowerCase(); const reg = taxasEntrega.find(t => endereco.includes(t.regiao.toLowerCase())); return reg ? reg.valor : 8; }
+        function salvarCadastro(e) { e.preventDefault(); const rua = document.getElementById("cliente-rua").value.trim(); const numero = document.getElementById("cliente-numero").value.trim(); const bairro = document.getElementById("cliente-bairro").value.trim(); const cidade = document.getElementById("cliente-cidade").value.trim(); if (!cidade) { alert("Selecione a cidade."); return; } clienteAtual = { nome: document.getElementById("cliente-nome").value, whats: document.getElementById("cliente-whats").value, rua, numero, bairro, cidade, endereco: `${rua}, ${numero} - ${bairro}, ${cidade}` }; document.getElementById("screen-auth").style.display = "none"; document.getElementById("app-cliente").style.display = "block"; }
+        function renderAdminProdutos() { const container = document.getElementById("admin-produtos-list"); if(container) container.innerHTML = produtos.map(p => `<div class="bg-black/50 p-3 rounded-xl border border-red-800"><input id="nome-${p.id}" value="${p.nome}" class="w-full bg-black/60 rounded p-2 mb-1"><input id="preco-${p.id}" value="${p.preco}" type="number" step="0.01" class="w-full bg-black/60 rounded p-2 mb-1"><select id="cat-${p.id}" class="w-full bg-black/60 rounded p-2 mb-1"><option ${p.categoria==='promocao'?'selected':''}>promocao</option><option ${p.categoria==='combinados'?'selected':''}>combinados</option><option ${p.categoria==='combos'?'selected':''}>combos</option><option ${p.categoria==='hot'?'selected':''}>hot</option><option ${p.categoria==='bebidas'?'selected':''}>bebidas</option></select><div class="flex gap-2"><input id="img-url-${p.id}" value="${p.img}" class="flex-1 bg-black/60 rounded p-2 mb-1" placeholder="URL da imagem"><input type="file" id="img-file-${p.id}" accept="image/*" class="hidden"><button onclick="document.getElementById('img-file-${p.id}').click()" class="bg-red-800 px-2 rounded"><i class="fas fa-paperclip"></i></button></div><textarea id="desc-${p.id}" class="w-full bg-black/60 rounded p-2">${p.desc}</textarea><button onclick="removerProduto(${p.id})" class="text-red-400 text-sm mt-1">Remover</button></div>`).join(''); produtos.forEach(p => { document.getElementById(`img-file-${p.id}`)?.addEventListener("change", (e) => { if(e.target.files[0]) { const reader = new FileReader(); reader.onload = ev => { document.getElementById(`img-url-${p.id}`).value = ev.target.result; }; reader.readAsDataURL(e.target.files[0]); } }); }); }
+        function removerProduto(id) { produtos = produtos.filter(p=>p.id!==id); renderAdminProdutos(); }
+        function adicionarNovoProduto() { const novoId = Date.now(); produtos.push({ id:novoId, nome:"Novo Produto", preco:0, categoria:"promocao", img:"https://placehold.co/300x200/red/white?text=Sushi", desc:"Descrição" }); renderAdminProdutos(); }
+        function salvarCardapioCompleto() { produtos.forEach(p => { p.nome = document.getElementById(`nome-${p.id}`)?.value || p.nome; p.preco = parseFloat(document.getElementById(`preco-${p.id}`)?.value) || 0; p.categoria = document.getElementById(`cat-${p.id}`)?.value || p.categoria; p.img = document.getElementById(`img-url-${p.id}`)?.value || p.img; p.desc = document.getElementById(`desc-${p.id}`)?.value || p.desc; }); localStorage.setItem("czk_produtos", JSON.stringify(produtos)); renderCardapio("promocao"); renderCarrosselAnimado(); alert("Cardápio salvo!"); }
+        function renderCardapio(cat) { const container = document.getElementById("cardapio-container"); if(!container) return; const filtrados = produtos.filter(p => p.categoria === cat); container.innerHTML = filtrados.map(p => `<div class="product-card rounded-2xl p-3 flex gap-3 transition-all"><img src="${p.img}" class="w-20 h-20 object-cover rounded-xl shadow-md clickable-img" onerror="this.src='https://placehold.co/200x200/red/white?text=Sushi'" onclick="abrirModalImagem('${p.img}')"><div class="flex-1"><h3 class="font-bold tracking-tight text-white">${p.nome}</h3><p class="text-[11px] text-white/50">${p.desc}</p><div class="flex justify-between items-center mt-2"><span class="text-red-500 font-black text-lg">R$ ${p.preco.toFixed(2)}</span><div class="flex items-center gap-2"><div class="quantity-control"><span class="quantity-btn" onclick="alterarQuantidade(${p.id}, -1)">-</span><span id="qtd-${p.id}" class="text-sm font-bold">1</span><span class="quantity-btn" onclick="alterarQuantidade(${p.id}, 1)">+</span></div><button onclick="adicionarAoCarrinhoComQtd(event, ${p.id})" class="bg-red-700/90 hover:bg-red-600 text-white text-xs px-3 py-1.5 rounded-full transition">Adicionar</button></div></div></div></div>`).join(""); }
+        function renderCarrosselAnimado() { const destaques = produtos.filter(p=>p.categoria==="promocao"); const carrosselDiv = document.getElementById("carousel-destaques"); if(carrosselDiv) carrosselDiv.innerHTML = [...destaques,...destaques].map(p=>`<div class="carousel-item bg-black/60 rounded-2xl border border-red-700/40 p-3"><img src="${p.img}" class="h-36 w-full object-cover rounded-xl clickable-img" onclick="abrirModalImagem('${p.img}')"><p class="font-bold mt-2 text-white">${p.nome}</p><p class="text-red-400 font-bold">R$ ${p.preco.toFixed(2)}</p><button onclick="adicionarAoCarrinhoComQtd(event, ${p.id})" class="bg-red-600 w-full mt-2 py-1.5 rounded-full">Pedir</button></div>`).join(""); }
+        window.alterarQuantidade = function(id, delta) { let span = document.getElementById(`qtd-${id}`); if(span) { let qtd = parseInt(span.innerText) + delta; if(qtd < 1) qtd = 1; span.innerText = qtd; } }
+        window.adicionarAoCarrinhoComQtd = function(event, id) { const prod = produtos.find(p => p.id === id); if(prod) { let qtdSpan = document.getElementById(`qtd-${id}`); let quantidade = qtdSpan ? parseInt(qtdSpan.innerText) : 1; const existente = carrinho.find(item => item.id === prod.id); if(existente) existente.quantidade += quantidade; else carrinho.push({ ...prod, quantidade: quantidade }); atualizarTotal(); const btn = event.currentTarget; const orig = btn.innerText; btn.innerText = `+${quantidade}`; btn.classList.add("bg-green-700"); setTimeout(() => { btn.innerText = orig; btn.classList.remove("bg-green-700"); }, 800); } }
+        function abrirLoginProprietario() { document.getElementById("modal-proprietario").style.display="flex"; }
+        function fecharModalAdmin() { document.getElementById("modal-proprietario").style.display="none"; }
+        function validarAdmin() { const s=document.getElementById("senha-admin").value; if(s==="admin123") { document.getElementById("modal-proprietario").style.display="none"; document.getElementById("admin-panel").style.display="block"; adminLogado = true; renderPedidosAtivos(); renderControleEntregas(); } else alert("Senha incorreta!"); }
+        function fecharAdmin() { document.getElementById("admin-panel").style.display="none"; adminLogado = false; }
+        function switchTab(tabId) { document.querySelectorAll(".admin-tab-content").forEach(t=>t.classList.remove("active")); document.getElementById(tabId).classList.add("active"); if(tabId==='pedidos-list') { renderHistorico(); } else if (tabId === 'cidades') { renderizarCidadesAdmin(); } else if (tabId === 'background-config') { renderizarGaleriaFundo(); } else if (tabId === 'entregadores') { renderizarEntregadoresAdmin(); } else if (tabId === 'pedidos-ativos') { renderPedidosAtivos(); } else if (tabId === 'controle-entrega') { renderControleEntregas(); } else if (tabId === 'taxas-regioes') { renderTaxasAdmin(); } }
+        function aplicarConfig() { document.getElementById("footer-endereco-text").innerHTML = `<i class="fas fa-map-marker-alt text-red-400 mr-1"></i> ${configEmpresa.endereco}`; document.getElementById("footer-contato-text").innerHTML = `<i class="fab fa-whatsapp text-green-400 mr-1"></i> ${configEmpresa.whatsapp}`; let iframe = document.getElementById("mapa-iframe"); if(iframe) iframe.src = configEmpresa.mapaUrl; document.getElementById("empresa-nome").value = configEmpresa.nome; document.getElementById("empresa-whats").value = configEmpresa.whatsapp; document.getElementById("empresa-cnpj").value = configEmpresa.cnpj; document.getElementById("empresa-endereco").value = configEmpresa.endereco; document.getElementById("empresa-pix").value = configEmpresa.pix; document.getElementById("logo-texto").value = logomarca.texto; document.getElementById("logo-estilo").value = logomarca.estilo; document.getElementById("subtitulo-texto").value = logomarca.subtitulo; if(logomarca.imagemBase64) document.getElementById("preview-logo-area").innerHTML = `<img src="${logomarca.imagemBase64}" class="logo-preview">`; else document.getElementById("preview-logo-area").innerHTML = ""; }
+        function salvarConfigEmpresa() { configEmpresa.nome = document.getElementById("empresa-nome").value; configEmpresa.whatsapp = document.getElementById("empresa-whats").value; configEmpresa.cnpj = document.getElementById("empresa-cnpj").value; configEmpresa.endereco = document.getElementById("empresa-endereco").value; configEmpresa.pix = document.getElementById("empresa-pix").value; localStorage.setItem("czk_config",JSON.stringify(configEmpresa)); aplicarConfig(); alert("Configurações salvas!"); }
+        window.filtrarCategoria = function(event, cat) { const btns = document.querySelectorAll(".filtro-btn"); btns.forEach(b=>{ b.classList.remove("text-red-500","border-b-2","border-red-500"); b.classList.add("text-white/60"); }); if(event && event.currentTarget) event.currentTarget.classList.add("text-red-500","border-b-2","border-red-500"); renderCardapio(cat); }
+        function abrirHistoricoCliente() { const pedidos = getPedidosDoCliente(); const container = document.getElementById("lista-pedidos-cliente"); if (!container) return; if (pedidos.length === 0) { container.innerHTML = `<div class="text-center text-white/50 py-8">Você ainda não fez nenhum pedido.</div>`; } else { container.innerHTML = pedidos.map((pedido, idx) => `<div class="bg-black/40 p-4 rounded-xl border border-red-800/50"><div class="flex justify-between items-start flex-wrap gap-2"><div><p class="text-xs text-white/50">${pedido.data} às ${pedido.hora}</p><p class="text-white font-semibold mt-1">Total: R$ ${pedido.total.toFixed(2)}</p><p class="text-xs text-white/60 mt-1">Pagamento: ${pedido.metodo}</p><p class="text-xs text-green-400 font-bold mt-1">Status: ${pedido.status || "Em preparo"}</p></div><button onclick="repetirPedido(${idx})" class="bg-red-700 hover:bg-red-600 text-white text-xs px-3 py-1.5 rounded-full transition flex items-center gap-1"><i class="fas fa-redo-alt"></i> Repetir</button></div><div class="mt-2 text-sm text-white/80"><strong>Itens:</strong><div class="text-xs text-white/60 mt-1 space-y-1">${pedido.itens.map(item => `• ${item}`).join('<br>')}</div></div></div>`).join(''); } document.getElementById("modal-historico-cliente").style.display = "flex"; }
+        function fecharModalHistoricoCliente() { document.getElementById("modal-historico-cliente").style.display = "none"; }
+        window.repetirPedido = function(pedidoIndex) { const pedidosCliente = getPedidosDoCliente(); const pedido = pedidosCliente[pedidoIndex]; if (!pedido || !pedido.itensOriginais) return; pedido.itensOriginais.forEach(itemOriginal => { const produtoAtual = produtos.find(p => p.id === itemOriginal.id); if (produtoAtual) { const existente = carrinho.find(i => i.id === produtoAtual.id); if (existente) existente.quantidade += itemOriginal.quantidade; else carrinho.push({ ...produtoAtual, quantidade: itemOriginal.quantidade }); } }); atualizarTotal(); fecharModalHistoricoCliente(); alert("Pedido adicionado ao carrinho!"); };
+        function abrirModalImagem(src) { const modal = document.getElementById("imageModal"); const modalImg = document.getElementById("modalImage"); modal.style.display = "flex"; modalImg.src = src; }
+        function fecharModalImagem() { document.getElementById("imageModal").style.display = "none"; }
+        function aplicarLogomarcaAuth() { const container = document.getElementById("logo-auth-container"); if(!container) return; if(logomarca.imagemBase64 && logomarca.imagemBase64.trim() !== "") { container.innerHTML = `<img src="${logomarca.imagemBase64}" alt="Logomarca" style="max-height:80px; width:auto; object-fit:contain; border-radius:12px;">`; } else { container.innerHTML = `<h1 class="text-5xl font-black ${logomarca.estilo} bg-gradient-to-r from-red-400 to-red-600 bg-clip-text text-transparent">${logomarca.texto || "CZK MAKI"}</h1>`; } const subtitulo = document.getElementById("subtitulo-auth"); if (subtitulo) subtitulo.innerText = logomarca.subtitulo || "L'art culinaire japonais"; }
+        function aplicarLogomarcaApp() { const container = document.getElementById("logo-container"); if(!container) return; if(logomarca.imagemBase64 && logomarca.imagemBase64.trim() !== "") { container.innerHTML = `<img src="${logomarca.imagemBase64}" alt="Logomarca" style="max-height:55px; width:auto; object-fit:contain; border-radius:8px;">`; } else { container.innerHTML = `<h1 id="loja-nome-header" class="text-2xl font-black ${logomarca.estilo} bg-gradient-to-r from-white to-red-200 bg-clip-text text-transparent">${logomarca.texto || "CZK MAKI"}</h1><p id="subtitulo-app" class="text-[9px] text-white/50 tracking-[0.2em]">${logomarca.subtitulo || "L'art culinaire japonais"}</p>`; } }
+        function aplicarLogomarca() { aplicarLogomarcaAuth(); aplicarLogomarcaApp(); }
+        function salvarLogomarca() { const texto = document.getElementById("logo-texto").value.trim(); const estilo = document.getElementById("logo-estilo").value; const subtitulo = document.getElementById("subtitulo-texto").value.trim(); logomarca.texto = texto || "CZK MAKI"; logomarca.estilo = estilo; logomarca.subtitulo = subtitulo || "L'art culinaire japonais"; const fileInput = document.getElementById("upload-logo"); if(fileInput.files.length > 0) { const reader = new FileReader(); reader.onload = function(e) { logomarca.imagemBase64 = e.target.result; localStorage.setItem("czk_logomarca", JSON.stringify(logomarca)); aplicarLogomarca(); alert("Logomarca e subtítulo salvos!"); document.getElementById("preview-logo-area").innerHTML = `<img src="${logomarca.imagemBase64}" class="logo-preview">`; }; reader.readAsDataURL(fileInput.files[0]); } else { localStorage.setItem("czk_logomarca", JSON.stringify(logomarca)); aplicarLogomarca(); alert("Logomarca e subtítulo salvos!"); } }
+        document.getElementById("upload-logo")?.addEventListener("change", function(e) { if(e.target.files.length) document.getElementById("logo-file-name").innerText = e.target.files[0].name; else document.getElementById("logo-file-name").innerText = "Nenhum arquivo"; });
+        function carregarDados() { 
+            inicializarBairrosPadrao();
+            let p = localStorage.getItem("czk_produtos"); if(p) produtos = JSON.parse(p);
+            let c = localStorage.getItem("czk_config"); if(c) configEmpresa = JSON.parse(c);
+            let h = localStorage.getItem("czk_pedidos"); if(h) historicoPedidos = JSON.parse(h);
+            let logo = localStorage.getItem("czk_logomarca"); if(logo) logomarca = JSON.parse(logo);
+            carregarCidades(); 
+            carregarConfigFundo(); 
+            carregarTaxas(); 
+            carregarEntregadores(); 
+            renderizarGaleriaFundo(); 
+            aplicarConfig(); 
+            aplicarLogomarca(); 
+            renderCardapio("promocao"); 
+            renderCarrosselAnimado(); 
+            renderAdminProdutos(); 
+            renderHistorico(); 
+            atualizarBairros(); 
+        }
+        carregarDados();
+    </script>
+</body>
+</html>
