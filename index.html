@@ -821,7 +821,50 @@
 
         // Pede permissão de notificação, registra o service worker e salva a "inscrição" no Supabase,
         // associada a um papel (cliente/admin/entregador) e um identificador (whats do cliente ou login do entregador).
+        // =========================================================================
+        //  ONESIGNAL — funciona tanto no navegador (Web Push) quanto dentro do
+        //  app do Kodular (que usa o componente nativo OneSignal, via Android/FCM).
+        // =========================================================================
+        const CZK_ONESIGNAL_APP_ID = "7d70b405-2d90-483d-b729-b5fdabb19286";
+        let czkOneSignalPronto = false;
+
+        // Carrega o SDK do OneSignal (só faz sentido no navegador; dentro do Kodular
+        // quem cuida da parte nativa é o componente OneSignal do próprio Kodular).
+        (function czkCarregarOneSignalSDK() {
+            const script = document.createElement('script');
+            script.defer = true;
+            script.src = "https://cdn.onesignal.com/sdks/OneSignalSDK.page.js";
+            document.head.appendChild(script);
+        })();
+
+        window.OneSignalDeferred = window.OneSignalDeferred || [];
+        OneSignalDeferred.push(async function(OneSignal) {
+            await OneSignal.init({ appId: CZK_ONESIGNAL_APP_ID, allowLocalhostAsSecureOrigin: true });
+            czkOneSignalPronto = true;
+        });
+
+        // Marca a "identidade" da pessoa (papel + identificador) tanto no OneSignal do navegador
+        // quanto avisa o app do Kodular (se estiver rodando dentro dele), via ponte do WebViewer.
+        async function czkConfigurarOneSignal(role, identificador) {
+            // 1) Navegador (Web Push via OneSignal)
+            try {
+                if(window.OneSignal) {
+                    await OneSignal.Notifications.requestPermission();
+                    await OneSignal.User.addTag('role', role);
+                    if(identificador) await OneSignal.User.addTag('identificador', String(identificador));
+                }
+            } catch(e) { console.warn('[OneSignal] erro no navegador:', e); }
+
+            // 2) Ponte para o app do Kodular: manda um texto que o WebViewer1.WebViewStringChanged escuta.
+            try {
+                if(window.AppInventor && window.AppInventor.setWebViewString) {
+                    window.AppInventor.setWebViewString(JSON.stringify({ tipo: 'onesignal_tag', role, identificador: identificador || null }));
+                }
+            } catch(e) { console.warn('[OneSignal] erro na ponte com o Kodular:', e); }
+        }
+
         async function czkAtivarPush(role, identificador) {
+            czkConfigurarOneSignal(role, identificador);
             try {
                 if(!('serviceWorker' in navigator) || !('PushManager' in window)) {
                     console.warn('[Push] Este navegador não suporta notificações push.');
