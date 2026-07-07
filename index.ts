@@ -1,28 +1,14 @@
 // Edge Function: enviar-push
 // Recebe { role, identificador, titulo, corpo, dados } do front-end (via
-// czkSupabase.functions.invoke) e envia um Web Push de verdade para todos os
-// dispositivos inscritos que combinem com o role/identificador.
+// czkSupabase.functions.invoke) e envia a notificação através da API do OneSignal,
+// que entrega tanto para o app Android (Kodular/FCM) quanto para o navegador (Web Push).
 //
-// Deploy (com a Supabase CLI, dentro da pasta do projeto):
-//   supabase functions deploy enviar-push
-//
-// Segredos necessários (rodar uma vez cada, veja instruções completas no chat):
-//   supabase secrets set VAPID_PUBLIC_KEY=...
-//   supabase secrets set VAPID_PRIVATE_KEY=...
-//   supabase secrets set VAPID_SUBJECT=mailto:seuemail@exemplo.com
+// Segredos necessários (Supabase > Edge Functions > Secrets):
+//   ONESIGNAL_APP_ID
+//   ONESIGNAL_REST_API_KEY
 
-import { createClient } from "npm:@supabase/supabase-js@2";
-import webpush from "npm:web-push@3.6.7";
-
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const VAPID_PUBLIC_KEY = Deno.env.get("VAPID_PUBLIC_KEY")!;
-const VAPID_PRIVATE_KEY = Deno.env.get("VAPID_PRIVATE_KEY")!;
-const VAPID_SUBJECT = Deno.env.get("VAPID_SUBJECT") || "mailto:contato@example.com";
-
-webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
-
-const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+const ONESIGNAL_APP_ID = Deno.env.get("ONESIGNAL_APP_ID")!;
+const ONESIGNAL_REST_API_KEY = Deno.env.get("ONESIGNAL_REST_API_KEY")!;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -44,38 +30,42 @@ Deno.serve(async (req) => {
       });
     }
 
-    let query = supabase.from("czk_push_subscriptions").select("*").eq("role", role);
-    if (identificador) query = query.eq("identificador", identificador);
-
-    const { data: inscricoes, error } = await query;
-    if (error) throw error;
-
-    const payload = JSON.stringify({ titulo, corpo, dados: dados || {} });
-
-    let enviados = 0;
-    const expiradas: string[] = [];
-
-    await Promise.all(
-      (inscricoes || []).map(async (inscricao) => {
-        try {
-          await webpush.sendNotification(inscricao.subscription, payload);
-          enviados++;
-        } catch (err) {
-          // 404/410 = inscrição expirada ou revogada pelo navegador; limpamos do banco.
-          if (err?.statusCode === 404 || err?.statusCode === 410) {
-            expiradas.push(inscricao.endpoint);
-          } else {
-            console.warn("Erro ao enviar push:", err);
-          }
-        }
-      })
-    );
-
-    if (expiradas.length > 0) {
-      await supabase.from("czk_push_subscriptions").delete().in("endpoint", expiradas);
+    // Filtra quem recebe a notificação pelas tags gravadas no front-end
+    // (czkConfigurarOneSignal grava 'role' e, quando existe, 'identificador').
+    const filters: Record<string, string>[] = [
+      { field: "tag", key: "role", relation: "=", value: String(role) },
+    ];
+    if (identificador) {
+      filters.push({ operator: "AND" });
+      filters.push({ field: "tag", key: "identificador", relation: "=", value: String(identificador) });
     }
 
-    return new Response(JSON.stringify({ enviados, expiradas: expiradas.length }), {
+    const resposta = await fetch("https://onesignal.com/api/v1/notifications", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        "Authorization": `Basic ${ONESIGNAL_REST_API_KEY}`,
+      },
+      body: JSON.stringify({
+        app_id: ONESIGNAL_APP_ID,
+        filters,
+        headings: { en: titulo, pt: titulo },
+        contents: { en: corpo || "", pt: corpo || "" },
+        data: dados || {},
+      }),
+    });
+
+    const resultado = await resposta.json();
+
+    if (!resposta.ok) {
+      console.error("Erro do OneSignal:", resultado);
+      return new Response(JSON.stringify({ error: resultado }), {
+        status: resposta.status,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    return new Response(JSON.stringify(resultado), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
