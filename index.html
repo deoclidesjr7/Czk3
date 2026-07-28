@@ -77,10 +77,14 @@
         /* Sem "contain: layout" aqui no mobile, pra elementos position:fixed (carrinho, modais) ficarem
            realmente fixos na tela do celular, e não "presos" dentro do #app-shell rolando junto com a página. */
         #app-shell { position: relative; width: 100%; min-height: 100vh; margin: 0 auto; }
-        /* "hover: hover" e "pointer: fine" só são verdadeiros em computador (mouse).
-           Assim, tablets/celulares em modo paisagem (que também passam de 900px de largura)
-           NÃO caem nessa regra e continuam ocupando a tela inteira, mesmo virados de lado. */
-        @media (min-width: 900px) and (hover: hover) and (pointer: fine) {
+        /* ===== Faixas de tela usadas no site (documentação de referência) =====
+           Smartphone: até 767px
+           Tablet:     768px – 991px
+           Notebook:   992px – 1199px
+           Desktop:    a partir de 1200px
+           A regra abaixo (antes baseada em hover/pointer, pra distinguir mouse de toque) passou
+           a usar só largura, seguindo essas faixas — vale a partir do Notebook (992px) pra cima. */
+        @media (min-width: 992px) {
             html, body { background: #0b1220; }
             #app-shell {
                 max-width: min(96vw, 1600px); /* quase a tela inteira no computador, igual ao painel do garçom em tablet/toque */
@@ -9701,7 +9705,7 @@ ${esgotado ? '' : '<div class="badge-destaque-3d"><span class="fire-icon fire-3d
             // biscoito pular de lugar a cada clique no computador (o mesmo código funciona certinho no
             // celular/tablet porque lá não existe essa moldura, e os dois sistemas de coordenadas coincidem).
             const getContainerRect = () => {
-                const emModoMoldura = window.matchMedia("(min-width: 900px) and (hover: hover) and (pointer: fine)").matches;
+                const emModoMoldura = window.matchMedia("(min-width: 992px)").matches;
                 if(emModoMoldura) {
                     const appShell = document.getElementById("app-shell");
                     if(appShell) return appShell.getBoundingClientRect();
