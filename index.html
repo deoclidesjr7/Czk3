@@ -3617,16 +3617,62 @@
         let camadaRotaEntregador = null;      // L.layerGroup com marcadores/linha da rota exibida
         
         // ===== BRIDGE NATIVA: Localização do Kodular (LocationSensor) =====
-        let ultimaLocalizacaoNativa = null;  // { lat, lng, timestamp } - vem do Kodular via RunJavaScript
+        let ultimaLocalizacaoNativa = null;  // { lat, lng, timestamp, confiavel } - vem do Kodular via RunJavaScript
+
+        // ===== Cache do GPS do WebView (navigator.geolocation) =====
+        // Alimentado continuamente pelo watchPosition do rastreamento (iniciarRastreamentoLocalizacao).
+        // Guarda também a "accuracy" (precisão em metros) retornada pelo navegador, pois é isso que
+        // permite detectar e IGNORAR localizações "de rede" (torre de celular/Wi-Fi) que podem vir
+        // a centenas/milhares de km de distância da posição real — a causa mais comum de rotas
+        // abrindo com origem "aleatória"/muito distante.
+        let ultimaFixWebView = null; // { lat, lng, accuracy, timestamp }
+        const PRECISAO_MAXIMA_CONFIAVEL_M = 300; // acima disso, tratamos como impreciso (rede, não GPS)
+
+        // O LocationSensor do Kodular (ver receberLocalizacaoNativa abaixo) não expõe uma
+        // propriedade de precisão/accuracy — só lat/lng. Então, pra pegar o mesmo tipo de fix
+        // "de rede" que pode vir a centenas/milhares de km de distância, a única forma de
+        // detectar é checar se o salto de posição é FISICAMENTE PLAUSÍVEL: se a velocidade
+        // implícita entre a última posição confiável e essa nova ultrapassa o que um motoboy
+        // conseguiria fazer, é sinal de teleporte (fix quebrado), não de deslocamento real.
+        let ultimoFixConfiavel = null; // { lat, lng, timestamp } - última posição (nativa ou webview) considerada boa
+        const VELOCIDADE_MAX_PLAUSIVEL_KMH = 180; // motoboy/carro em rodovia; acima disso, é fix quebrado
+
+        function distanciaKm(lat1, lng1, lat2, lng2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLng = (lng2 - lng1) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        }
+
+        // Retorna true se o salto até (lat,lng) em relação ao último fix confiável for plausível
+        // (ou se não houver fix anterior pra comparar - nesse caso, aceita e deixa essa virar a base).
+        function fixEhPlausivel(lat, lng, timestamp) {
+            if (!ultimoFixConfiavel) return true;
+            const horas = (timestamp - ultimoFixConfiavel.timestamp) / 3600000;
+            if (horas <= 0) return true; // relógio/ordem estranha, não bloqueia por causa disso
+            const km = distanciaKm(ultimoFixConfiavel.lat, ultimoFixConfiavel.lng, lat, lng);
+            const velocidadeKmh = km / horas;
+            return velocidadeKmh <= VELOCIDADE_MAX_PLAUSIVEL_KMH;
+        }
+
         function receberLocalizacaoNativa(latitude, longitude, altitude, speed, provider) {
+            const agora = Date.now();
+            const confiavel = fixEhPlausivel(latitude, longitude, agora);
             ultimaLocalizacaoNativa = {
                 lat: latitude,
                 lng: longitude,
                 altitude: altitude,
                 speed: speed,
                 provider: provider,
-                timestamp: Date.now()
+                timestamp: agora,
+                confiavel: confiavel
             };
+            if (confiavel) {
+                ultimoFixConfiavel = { lat: latitude, lng: longitude, timestamp: agora };
+            } else {
+                console.warn(`[GPS NATIVO] Fix descartado por implausível (salto físico impossível):`, latitude, longitude);
+            }
             console.log("[GPS NATIVO] Localização recebida do Kodular:", ultimaLocalizacaoNativa);
             // Também salva no Supabase (chave czk_localizacoes_entregadores), pra alimentar
             // o mapa em tempo real do admin — antes só era usada pra rota otimizada.
@@ -7433,57 +7479,111 @@ ${esgotado ? '' : '<div class="badge-destaque-3d"><span class="fire-icon fire-3d
                     window.open(url, '_blank');
                 };
 
-                // PRIORIDADE 1: Tenta usar a localização nativa do Kodular (LocationSensor)
-                // Se recebeu uma coordenada há menos de 2 minutos, usa ela (é mais confiável que o WebView)
-                if (ultimaLocalizacaoNativa && (Date.now() - ultimaLocalizacaoNativa.timestamp) < 120000) {
+                // Modal genérico de aviso, com botão "Abrir sem GPS" (sem parâmetro origin,
+                // deixando o Google decidir) e, quando houver uma coordenada disponível mesmo
+                // que não 100% confiável, um botão extra pra abrir usando ela mesmo assim.
+                const mostrarAvisoGps = (titulo, motivo, coordsDisponiveis) => {
+                    const modal = document.createElement('div');
+                    modal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50';
+                    const btnUsarCoords = coordsDisponiveis ? `
+                                        <button onclick="
+                                            this.closest('.fixed').remove();
+                                            const destinoFinal = encodeURIComponent('${paradas[paradas.length - 1].endereco}');
+                                            const intermediarias = '${paradas.slice(0, -1).map(p => encodeURIComponent(p.endereco)).join('|')}';
+                                            const url = 'https://www.google.com/maps/dir/?api=1&origin=${coordsDisponiveis}&destination=' + destinoFinal + '&waypoints=optimize:true|' + intermediarias + '&travelmode=driving&dir_action=navigate';
+                                            window.open(url, '_blank');
+                                        " class="flex-1 px-4 py-2 bg-amber-500 text-white rounded-lg font-medium hover:bg-amber-600 transition">Usar localização aproximada</button>` : '';
+                    modal.innerHTML = `
+                        <div class="bg-white rounded-lg p-6 max-w-sm mx-4">
+                            <div class="flex items-start gap-3 mb-4">
+                                <div class="text-2xl">⚠️</div>
+                                <div>
+                                    <h3 class="font-bold text-gray-900 mb-2">${titulo}</h3>
+                                    <p class="text-sm text-gray-700">${motivo}</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-2 mt-6">
+                                <button onclick="this.closest('.fixed').remove()" class="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg font-medium hover:bg-gray-300 transition">Cancelar</button>${btnUsarCoords}
+                                <button onclick="
+                                    this.closest('.fixed').remove();
+                                    const destinoFinal = encodeURIComponent('${paradas[paradas.length - 1].endereco}');
+                                    const intermediarias = '${paradas.slice(0, -1).map(p => encodeURIComponent(p.endereco)).join('|')}';
+                                    const url = 'https://www.google.com/maps/dir/?api=1&destination=' + destinoFinal + '&waypoints=optimize:true|' + intermediarias + '&travelmode=driving&dir_action=navigate';
+                                    window.open(url, '_blank');
+                                " class="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition">Abrir sem GPS</button>
+                            </div>
+                        </div>
+                    `;
+                    document.body.appendChild(modal);
+                };
+
+                // PRIORIDADE 1: Localização nativa do Kodular (LocationSensor), se recebida
+                // há menos de 2 minutos E se passou no teste de plausibilidade (sem salto
+                // físico impossível) — é a mais confiável quando passa nesse teste, pois vem
+                // do GPS real do aparelho e não do WebView (que em muitos apps empacotados
+                // nem chama navigator.geolocation).
+                if (ultimaLocalizacaoNativa && ultimaLocalizacaoNativa.confiavel !== false && (Date.now() - ultimaLocalizacaoNativa.timestamp) < 120000) {
                     console.log("[ROTA] Usando localização nativa do Kodular");
                     abrirUrlRotaOtimizada(`${ultimaLocalizacaoNativa.lat},${ultimaLocalizacaoNativa.lng}`);
                     return;
                 }
 
-                // PRIORIDADE 2: Fallback para navigator.geolocation (WebView)
+                // PRIORIDADE 2: Cache do watchPosition do WebView (já rodando em segundo plano
+                // desde que o entregador logou), MAS só se a precisão for boa (<= 300m). É esse
+                // filtro de precisão que evita usar um fix "de rede" (torre de celular/Wi-Fi)
+                // que pode estar a centenas de km de distância — a causa mais provável das
+                // localizações "aleatórias"/muito distantes relatadas.
+                if (ultimaFixWebView && (Date.now() - ultimaFixWebView.timestamp) < 60000 && ultimaFixWebView.accuracy <= PRECISAO_MAXIMA_CONFIAVEL_M) {
+                    console.log(`[ROTA] Usando cache do GPS do WebView (precisão: ${Math.round(ultimaFixWebView.accuracy)}m)`);
+                    abrirUrlRotaOtimizada(`${ultimaFixWebView.lat},${ultimaFixWebView.lng}`);
+                    return;
+                }
+
+                // PRIORIDADE 3: Pede uma leitura nova via navigator.geolocation.getCurrentPosition.
+                // Timeout aumentado de 10s pra 25s (10s é pouco em local fechado/sinal fraco) e
+                // maximumAge de 5s (permite reaproveitar um fix bem recente do próprio sistema).
                 if (navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition(
                         (pos) => {
-                            console.log("[ROTA] Usando geolocalização do WebView");
-                            abrirUrlRotaOtimizada(`${pos.coords.latitude},${pos.coords.longitude}`);
+                            const precisao = pos.coords.accuracy;
+                            const coords = `${pos.coords.latitude},${pos.coords.longitude}`;
+                            if (precisao > PRECISAO_MAXIMA_CONFIAVEL_M) {
+                                // Fix impreciso (provavelmente por rede/Wi-Fi, não GPS). Em vez de
+                                // abrir direto com uma origem possivelmente errada, avisa o
+                                // entregador e deixa ele decidir.
+                                console.warn(`[ROTA] GPS impreciso (${Math.round(precisao)}m) - pedindo confirmação`);
+                                mostrarAvisoGps(
+                                    "Localização imprecisa",
+                                    `Seu GPS retornou uma localização com baixa precisão (~${Math.round(precisao)}m), provavelmente por sinal fraco ou por estar usando Wi-Fi/rede em vez de GPS. Você pode tentar novamente em local aberto, usar essa localização mesmo assim, ou abrir sem GPS.`,
+                                    coords
+                                );
+                                return;
+                            }
+                            console.log(`[ROTA] Usando geolocalização do WebView (precisão: ${Math.round(precisao)}m)`);
+                            ultimaFixWebView = { lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: precisao, timestamp: Date.now() };
+                            ultimoFixConfiavel = { lat: pos.coords.latitude, lng: pos.coords.longitude, timestamp: Date.now() };
+                            abrirUrlRotaOtimizada(coords);
                         },
                         (erro) => {
-                            // GPS falhou - oferece opção de abrir sem GPS
+                            // GPS falhou. Se tivermos um fix anterior ainda razoavelmente recente
+                            // (até 5 min), usa ele como fallback em vez de abrir sem nenhuma origem.
+                            if (ultimaFixWebView && (Date.now() - ultimaFixWebView.timestamp) < 300000) {
+                                console.warn("[ROTA] GPS falhou, usando última localização conhecida como fallback");
+                                abrirUrlRotaOtimizada(`${ultimaFixWebView.lat},${ultimaFixWebView.lng}`);
+                                return;
+                            }
+
                             let motivo = "Não foi possível obter sua localização atual.";
                             if (erro && erro.code === erro.PERMISSION_DENIED) {
-                                motivo = "Permissão de localização negada.";
+                                motivo = "Permissão de localização negada. Verifique nas configurações do app/navegador se a permissão de localização (\"Permitir sempre\" ou \"Precisa\") está ativada.";
                             } else if (erro && erro.code === erro.TIMEOUT) {
-                                motivo = "O GPS demorou demais para responder.";
+                                motivo = "O GPS demorou demais para responder. Tente em um local mais aberto (fora de prédios) e com boa vista do céu.";
+                            } else if (erro && erro.code === erro.POSITION_UNAVAILABLE) {
+                                motivo = "O dispositivo não conseguiu determinar a posição. Verifique se o GPS do aparelho está ligado.";
                             }
-                            
-                            // Mostra modal com opção de continuar sem GPS
-                            const modal = document.createElement('div');
-                            modal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50';
-                            modal.innerHTML = `
-                                <div class="bg-white rounded-lg p-6 max-w-sm mx-4">
-                                    <div class="flex items-start gap-3 mb-4">
-                                        <div class="text-2xl">⚠️</div>
-                                        <div>
-                                            <h3 class="font-bold text-gray-900 mb-2">Localização não encontrada</h3>
-                                            <p class="text-sm text-gray-700">${motivo}</p>
-                                        </div>
-                                    </div>
-                                    <div class="flex gap-2 mt-6">
-                                        <button onclick="this.closest('.fixed').remove()" class="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg font-medium hover:bg-gray-300 transition">Cancelar</button>
-                                        <button onclick="
-                                            this.closest('.fixed').remove();
-                                            const destinoFinal = encodeURIComponent('${paradas[paradas.length - 1].endereco}');
-                                            const intermediarias = '${paradas.slice(0, -1).map(p => encodeURIComponent(p.endereco)).join('|')}';
-                                            const url = 'https://www.google.com/maps/dir/?api=1&destination=' + destinoFinal + '&waypoints=optimize:true|' + intermediarias + '&travelmode=driving&dir_action=navigate';
-                                            window.open(url, '_blank');
-                                        " class="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition">Abrir sem GPS</button>
-                                    </div>
-                                </div>
-                            `;
-                            document.body.appendChild(modal);
+                            mostrarAvisoGps("Localização não encontrada", motivo, null);
                         },
-                        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                        { enableHighAccuracy: true, timeout: 25000, maximumAge: 5000 }
                     );
                 } else {
                     // Navegador não suporta geolocalização - oferece fallback
@@ -7526,7 +7626,25 @@ ${esgotado ? '' : '<div class="badge-destaque-3d"><span class="fire-icon fire-3d
             if(!navigator.geolocation || !entregadorLogado) return;
             if(watchIdLocalizacao !== null) return; // já está rastreando
             watchIdLocalizacao = navigator.geolocation.watchPosition(
-                (pos) => salvarLocalizacaoEntregador(pos.coords.latitude, pos.coords.longitude),
+                (pos) => {
+                    // Só substitui o cache se essa nova leitura for igual ou mais precisa que
+                    // a anterior (ou se a anterior já estiver velha), pra não sobrescrever um
+                    // fix bom de GPS com um fix ruim baseado em rede/Wi-Fi que chegou depois.
+                    const anterior = ultimaFixWebView;
+                    const antigo = anterior && (Date.now() - anterior.timestamp) > 30000;
+                    if (!anterior || antigo || pos.coords.accuracy <= anterior.accuracy) {
+                        ultimaFixWebView = {
+                            lat: pos.coords.latitude,
+                            lng: pos.coords.longitude,
+                            accuracy: pos.coords.accuracy,
+                            timestamp: Date.now()
+                        };
+                        if (pos.coords.accuracy <= PRECISAO_MAXIMA_CONFIAVEL_M) {
+                            ultimoFixConfiavel = { lat: pos.coords.latitude, lng: pos.coords.longitude, timestamp: Date.now() };
+                        }
+                    }
+                    salvarLocalizacaoEntregador(pos.coords.latitude, pos.coords.longitude);
+                },
                 (erro) => { console.warn("[Localização] não foi possível rastrear:", erro && erro.message); },
                 { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 }
             );
