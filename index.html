@@ -110,6 +110,13 @@
                 text-overflow: clip;
                 white-space: nowrap;
             }
+            /* Tela de login: no computador (mouse de verdade), o cartão ficava grande demais
+               proporcionalmente à tela. Reduz 25% (scale 0.75) de forma proporcional — texto,
+               botões, campos, tudo junto — sem mexer no tamanho usado em celular/tablet. */
+            #screen-login .glass-card {
+                transform: scale(0.75);
+                transform-origin: center;
+            }
         }
 
         /* ===== Bloqueio visual por plano (licença) ===== */
