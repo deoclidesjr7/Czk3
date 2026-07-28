@@ -3628,6 +3628,9 @@
                 timestamp: Date.now()
             };
             console.log("[GPS NATIVO] Localização recebida do Kodular:", ultimaLocalizacaoNativa);
+            // Também salva no Supabase (chave czk_localizacoes_entregadores), pra alimentar
+            // o mapa em tempo real do admin — antes só era usada pra rota otimizada.
+            salvarLocalizacaoEntregador(latitude, longitude);
         }
         let cacheGeocodeEnderecos = {};       // { "endereço, cidade": {lat,lng} } — evita geocodificar de novo
         let historicoRotasEntregadores = {};  // { "login_dd-mm-yyyy": [ {lat,lng,ts}, ... ] } — trilha real de GPS
@@ -7523,25 +7526,7 @@ ${esgotado ? '' : '<div class="badge-destaque-3d"><span class="fire-icon fire-3d
             if(!navigator.geolocation || !entregadorLogado) return;
             if(watchIdLocalizacao !== null) return; // já está rastreando
             watchIdLocalizacao = navigator.geolocation.watchPosition(
-                (pos) => {
-                    const agora = Date.now();
-                    if(agora - ultimoEnvioLocalizacao < 15000) return;
-                    ultimoEnvioLocalizacao = agora;
-                    if(!entregadorLogado) return;
-                    localizacoesEntregadores[entregadorLogado] = {
-                        lat: pos.coords.latitude,
-                        lng: pos.coords.longitude,
-                        atualizadoEm: agora
-                    };
-                    czkSave("czk_localizacoes_entregadores", localizacoesEntregadores);
-
-                    // também guarda esse ponto na trilha do dia (histórico do trajeto real),
-                    // para depois podermos desenhar "por onde ele passou de verdade" no mapa de rotas.
-                    const chaveRota = `${entregadorLogado}_${obterDataAtualFormatada().split('/').join('-')}`;
-                    if(!historicoRotasEntregadores[chaveRota]) historicoRotasEntregadores[chaveRota] = [];
-                    historicoRotasEntregadores[chaveRota].push({ lat: pos.coords.latitude, lng: pos.coords.longitude, ts: agora });
-                    czkSave(`czk_rota_${chaveRota}`, historicoRotasEntregadores[chaveRota]);
-                },
+                (pos) => salvarLocalizacaoEntregador(pos.coords.latitude, pos.coords.longitude),
                 (erro) => { console.warn("[Localização] não foi possível rastrear:", erro && erro.message); },
                 { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 }
             );
@@ -7552,6 +7537,39 @@ ${esgotado ? '' : '<div class="badge-destaque-3d"><span class="fire-icon fire-3d
                 watchIdLocalizacao = null;
             }
         }
+        // Lógica de salvar (throttle de 15s + trilha do dia), usada tanto pelo GPS
+        // do navegador (watchPosition acima) quanto pelo GPS nativo do app Android
+        // (ver czkReceberLocalizacaoNativa logo abaixo).
+        function salvarLocalizacaoEntregador(lat, lng) {
+            const agora = Date.now();
+            if(agora - ultimoEnvioLocalizacao < 15000) return;
+            ultimoEnvioLocalizacao = agora;
+            if(!entregadorLogado) return;
+            localizacoesEntregadores[entregadorLogado] = { lat, lng, atualizadoEm: agora };
+            czkSave("czk_localizacoes_entregadores", localizacoesEntregadores);
+
+            // também guarda esse ponto na trilha do dia (histórico do trajeto real),
+            // para depois podermos desenhar "por onde ele passou de verdade" no mapa de rotas.
+            const chaveRota = `${entregadorLogado}_${obterDataAtualFormatada().split('/').join('-')}`;
+            if(!historicoRotasEntregadores[chaveRota]) historicoRotasEntregadores[chaveRota] = [];
+            historicoRotasEntregadores[chaveRota].push({ lat, lng, ts: agora });
+            czkSave(`czk_rota_${chaveRota}`, historicoRotasEntregadores[chaveRota]);
+        }
+        // ----- Lado ENTREGADOR (apps empacotados, tipo Kodular/WebView): o navigator.geolocation
+        // do JavaScript NÃO funciona dentro de muitos WebViews Android (o app pede permissão de
+        // localização, mas não repassa a posição pra dentro da página). Nesses casos, o app nativo
+        // (ex: componente LocationSensor do Kodular) deve pegar a localização por conta própria e
+        // chamar esta função a cada ~15s via WebViewer1.RunJavaScript(
+        //   "czkReceberLocalizacaoNativa(" + LocationSensor1.Latitude + "," + LocationSensor1.Longitude + ")"
+        // )
+        // Alias com prefixo "czk" (caso seu bloco no Kodular já tenha sido remontado usando
+        // esse nome) — os dois nomes funcionam e caem na mesma função acima.
+        window.czkReceberLocalizacaoNativa = function(lat, lng) {
+            lat = parseFloat(lat); lng = parseFloat(lng);
+            if(isNaN(lat) || isNaN(lng)) return;
+            receberLocalizacaoNativa(lat, lng, null, null, 'kodular');
+        };
+
 
         // ----- Lado ADMIN: mapa Leaflet (OpenStreetMap, gratuito, sem API key) -----
         async function inicializarMapaEntregadoresAdmin() {
