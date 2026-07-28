@@ -3,7 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>CZK MAKI | Sushi </title>
+    <title>CZK MAKI</title>
+
+    <!-- ===================== Prévia de link (WhatsApp, redes sociais, etc.) =====================
+         Sem essas tags, apps como o WhatsApp só conseguem mostrar o <title> em texto puro, sem
+         nenhuma imagem — foi exatamente o que aconteceu antes. Com og:image apontando pra logo,
+         a prévia passa a mostrar a logo ANTES do nome/descrição, como um cartão. =============== -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://czkmaki.com.br/">
+    <meta property="og:title" content="CZK MAKI">
+    <meta property="og:description" content="Peça já pelo cardápio digital do CZK MAKI 🍣">
+    <meta property="og:image" content="https://czkmaki.com.br/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="CZK MAKI">
+    <meta name="twitter:description" content="Peça já pelo cardápio digital do CZK MAKI 🍣">
+    <meta name="twitter:image" content="https://czkmaki.com.br/og-image.png">
 
     <!-- CORREÇÃO DE "FLASH": a classe "hidden" só existe de verdade depois que o script do
          Tailwind (carregado via CDN, mais abaixo) termina de processar a página. Enquanto isso
@@ -480,6 +494,22 @@
         .czk-toast-garcom-pronto { position: fixed; top: 18px; left: 50%; transform: translateX(-50%); z-index: 9998; background: linear-gradient(135deg, #059669, #10b981); color: #fff; font-weight: 700; font-size: 13px; padding: 12px 20px; border-radius: 999px; box-shadow: 0 12px 30px -8px rgba(16,185,129,0.6); display: flex; align-items: center; gap: 8px; animation: czkToastGarcomIn .25s ease, czkToastGarcomPulso 1s ease-in-out 2; max-width: 92vw; text-align: center; }
         @keyframes czkToastGarcomIn { from { opacity: 0; transform: translateX(-50%) translateY(-16px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
         @keyframes czkToastGarcomPulso { 0%, 100% { box-shadow: 0 12px 30px -8px rgba(16,185,129,0.6); } 50% { box-shadow: 0 12px 30px -4px rgba(16,185,129,0.95); } }
+
+        /* Toast de confirmação pro CLIENTE/MESA quando o chamado do garçom é enviado (azul, pra
+           não confundir visualmente com o toast verde de "pedido pronto" acima, que é do garçom). */
+        .czk-toast-chamado-garcom { position: fixed; top: 18px; left: 50%; transform: translateX(-50%); z-index: 9998; background: linear-gradient(135deg, #2563eb, #38bdf8); color: #fff; font-weight: 700; font-size: 13px; padding: 12px 20px; border-radius: 999px; box-shadow: 0 12px 30px -8px rgba(37,99,235,0.6); display: flex; align-items: center; gap: 8px; animation: czkToastGarcomIn .25s ease; max-width: 92vw; text-align: center; }
+
+        /* Botão "Chamar garçom", ao lado da logo no cabeçalho da mesa/tablet volante. */
+        #btn-chamar-garcom-mesa { pointer-events: auto; }
+        #btn-chamar-garcom-mesa.czk-chamando { animation: czkChamarGarcomPulso 1s ease-in-out infinite; }
+        @keyframes czkChamarGarcomPulso { 0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.55); } 50% { box-shadow: 0 0 0 8px rgba(239,68,68,0); } }
+
+        /* Cartão da mesa "chamando o garçom" no painel do garçom/admin: pisca em vermelho,
+           como uma sirene, até alguém verificar/atender. */
+        .czk-mesa-chamando-sirene { animation: czkSireneBorda 0.9s ease-in-out infinite !important; border-color: #ef4444 !important; background-color: rgba(239,68,68,0.14) !important; }
+        @keyframes czkSireneBorda { 0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.55); } 50% { box-shadow: 0 0 14px 3px rgba(239,68,68,0.85); } }
+        .czk-badge-chamando-garcom { position: absolute; top: -10px; right: -10px; background: #ef4444; color: #fff; font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 999px; box-shadow: 0 4px 12px -2px rgba(239,68,68,0.7); display: flex; align-items: center; gap: 4px; animation: czkSirenePisca 0.8s ease-in-out infinite; }
+        @keyframes czkSirenePisca { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
         .popup-pedido { position: fixed; inset: 0; z-index: 9999; background: rgba(9,14,26,0.72); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 16px; animation: czkFadeIn .2s ease; }
         .popup-pedido-content { background: #101a2c; border: 1px solid rgba(59,130,246,0.4); border-radius: 18px; padding: 28px 24px; max-width: 380px; width: 100%; text-align: center; box-shadow: 0 25px 60px -15px rgba(0,0,0,0.6); }
         .popup-cancelamento .popup-pedido-content { border-color: #b91c1c; }
@@ -2414,7 +2444,10 @@
     <!-- APP PRINCIPAL DO CLIENTE -->
     <div id="app-cliente" style="display: none;" class="pb-32">
         <header class="sticky top-0 z-20 glass-card border-b border-blue-800/40 backdrop-blur-xl relative">
-            <div id="logo-container" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center shrink-0 z-10 pointer-events-none"></div>
+            <div id="logo-mesa-call-wrapper" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-2 z-10 pointer-events-none">
+                <div id="logo-container" class="flex items-center justify-center shrink-0"></div>
+                <button id="btn-chamar-garcom-mesa" onclick="chamarGarcom()" class="hidden pointer-events-auto bg-red-600 hover:bg-red-500 text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 whitespace-nowrap"><i class="fas fa-bell"></i> <span id="btn-chamar-garcom-texto">Chamar garçom</span></button>
+            </div>
             <div id="header-cliente-linha-voltar" class="flex items-center gap-1.5 px-5 pt-0.5 pb-0.5 cursor-pointer w-fit voltar-mesa-discreto" onclick="modoGarcomAtivo ? voltarParaPainelGarcom() : (modoMesaAtivo ? abrirModalPinSairMesa() : voltarTelaInicial())">
                 <i class="fas fa-arrow-left text-white/60 text-xs"></i>
                 <span id="texto-voltar-header-cliente" class="text-white/60 text-[10px] font-bold uppercase tracking-wide">Voltar</span>
@@ -3193,6 +3226,24 @@
                 case 'czk_entregadores': entregadores = value; renderizarEntregadoresAdmin(); break;
                 case 'czk_mesas': mesas = value || []; renderMesasAdmin(); renderBalcaoAdmin(); if(garcomLogado) renderGarcomPainelMesas(); break;
                 case 'czk_comandas': comandas = value || []; renderMesasAdmin(); renderBalcaoAdmin(); atualizarBadgeComandaMesaCliente(); if(garcomLogado) renderGarcomPainelMesas(); break;
+                case 'czk_chamados_garcom': {
+                    const anteriores = chamadosGarcom;
+                    chamadosGarcom = value || {};
+                    const chegouChamadoNovo = Object.keys(chamadosGarcom).some(numero => !anteriores[numero]);
+                    if(garcomLogado) {
+                        renderGarcomPainelMesas();
+                        if(chegouChamadoNovo) czkTocarSom('chamado_garcom');
+                    }
+                    if(adminLogado && document.getElementById("admin-panel")?.style.display === "block") renderMesasAdmin();
+                    // Se este próprio tablet é a mesa que chamou (ou deixou de chamar), sincroniza o
+                    // estado visual do botão (ex: garçom verificou pelo painel dele, o botão dessa
+                    // mesa para de piscar sozinho, sem precisar recarregar a página).
+                    if(modoMesaAtivo && !modoGarcomAtivo && mesaAtual !== null) {
+                        const btnChamarGarcom = document.getElementById("btn-chamar-garcom-mesa");
+                        if(btnChamarGarcom) btnChamarGarcom.classList.toggle("czk-chamando", !!chamadosGarcom[mesaAtual]);
+                    }
+                    break;
+                }
                 case 'czk_garcons': garcons = value || []; renderizarGarconsAdmin(); break;
                 case 'czk_cidades': cidadesDisponiveis = value; atualizarSelectCidades(); renderizarCidadesAdmin(); break;
                 case 'czk_taxas': taxasEntrega = value; renderTaxasAdmin(); break;
@@ -3382,6 +3433,7 @@
                     : tipo === 'atrasado' ? [523, 392, 523, 392]
                     : tipo === 'atencao' ? [740, 740]
                     : tipo === 'garcom_pronto' ? [988, 1319, 988, 1319]
+                    : tipo === 'chamado_garcom' ? [1500, 950, 1500, 950, 1500, 950]
                     : [660, 880];
 
                 notas.forEach((freq, i) => {
@@ -3538,6 +3590,10 @@
         let garcomLogado = null; // { login, nome } do garçom autenticado no painel
         let modoGarcomAtivo = false; // true quando é o GARÇOM lançando o pedido em nome da mesa (não o cliente pelo tablet fixo)
         let modoMesaVolante = false; // true quando o tablet é COMPARTILHADO entre várias mesas (não fica fixo numa só) — a mesa só é identificada na hora de enviar o pedido, escaneando o QR Code impresso nela
+        // Chamado de garçom: mesa aperta o botão ao lado da logo, o garçom é notificado (push) e
+        // a mesa fica piscando (sirene) na grade dele até alguém verificar/atender.
+        let chamadosGarcom = {}; // { [numeroMesa]: { em: timestamp } }
+        let chamandoGarcomEmAndamento = false; // trava simples pra evitar clique duplo/spam
         let adminLogado = false;
         let entregadorLogado = null;
         let cozinhaLogada = false; // painel da cozinha é um monitor compartilhado, não precisa de identidade individual
@@ -9915,6 +9971,7 @@ ${esgotado ? '' : '<div class="badge-destaque-3d"><span class="fire-icon fire-3d
             document.getElementById("screen-login").style.display = "none";
             document.getElementById("garcom-nome-header").innerText = `— ${garcomLogado.nome}`;
             document.getElementById("garcom-panel").style.display = "block";
+            czkAtivarPush('garcom', garcomLogado.login);
             renderGarcomPainelMesas();
         }
         function sairGarcom() {
@@ -9936,6 +9993,59 @@ ${esgotado ? '' : '<div class="badge-destaque-3d"><span class="fire-icon fire-3d
             toast.innerHTML = `<i class="fas fa-bell"></i><span>${texto}</span>`;
             document.body.appendChild(toast);
             setTimeout(() => toast.remove(), 6000);
+        }
+
+        // =========================================================================
+        //  CHAMAR GARÇOM (botão ao lado da logo, mesa fixa ou tablet volante)
+        // =========================================================================
+        // Ponto de entrada do botão. No tablet volante, antes de a mesa enviar o primeiro
+        // pedido, ainda não sabemos qual mesa é (mesaAtual só é definido no envio/QR) — nesse
+        // caso abrimos o mesmo leitor de QR usado pra identificar a mesa, só que o resultado
+        // dispara o chamado em vez de mandar um pedido.
+        function chamarGarcom() {
+            if (chamandoGarcomEmAndamento) return;
+            if (modoMesaVolante && !mesaAtual) {
+                abrirScannerParaChamarGarcom();
+                return;
+            }
+            if (!mesaAtual) return;
+            dispararChamadoGarcom(mesaAtual);
+        }
+
+        function dispararChamadoGarcom(numeroMesa) {
+            chamandoGarcomEmAndamento = true;
+            chamadosGarcom[numeroMesa] = { em: Date.now() };
+            czkSave("czk_chamados_garcom", chamadosGarcom);
+            czkNotificarPush('garcom', null, 'Chamado de mesa! 🔔', `${nomeMesa(numeroMesa)} está chamando o garçom.`, { numeroMesa });
+            exibirToastChamadoGarcomEnviado();
+            const btn = document.getElementById("btn-chamar-garcom-mesa");
+            if (btn) btn.classList.add("czk-chamando");
+            // Trava simples de 30s pra evitar clique repetido/spam enquanto o garçom não chega —
+            // depois disso o botão volta a funcionar normalmente (a mesa pode chamar de novo se precisar).
+            setTimeout(() => { chamandoGarcomEmAndamento = false; }, 30000);
+        }
+
+        // O garçom "verifica"/atende o chamado — some da grade dele e o botão da mesa volta ao normal.
+        function resolverChamadoGarcom(numeroMesa) {
+            if (!chamadosGarcom[numeroMesa]) return;
+            delete chamadosGarcom[numeroMesa];
+            czkSave("czk_chamados_garcom", chamadosGarcom);
+        }
+
+        function exibirToastChamadoGarcomEnviado() {
+            document.querySelectorAll(".czk-toast-chamado-garcom").forEach(el => el.remove());
+            const toast = document.createElement("div");
+            toast.className = "czk-toast-chamado-garcom";
+            toast.innerHTML = `<i class="fas fa-bell"></i><span>Garçom chamado! Já estamos avisando.</span>`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 5000);
+        }
+
+        // Leitor de QR reaproveitado (mesmo modal/câmera do tablet volante), só que o resultado
+        // dispara um chamado de garçom em vez de enviar um pedido pra cozinha.
+        function abrirScannerParaChamarGarcom() {
+            _czkScannerParaChamarGarcom = true;
+            abrirScannerMesaVolante(null);
         }
 
         // Garçom marca que já levou o(s) prato(s) daquele pedido pra mesa. Isso não mexe no
@@ -9999,8 +10109,9 @@ ${esgotado ? '' : '<div class="badge-destaque-3d"><span class="fire-icon fire-3d
                     return soma + servidoStatus.filter(v => !v).length;
                 }, 0) : 0;
                 const temAlerta = pedidosProntos > 0;
-                return `<button onclick="abrirMesaComoGarcom('${m.numero}')" class="relative text-left rounded-2xl p-4 border-2 transition ${temAlerta ? 'border-emerald-400 bg-emerald-900/30 animate-pulse' : (livre ? 'border-emerald-600/50 bg-emerald-900/10 hover:bg-emerald-900/25' : 'border-amber-500/60 bg-amber-900/15 hover:bg-amber-900/25')}">
-                    ${temAlerta ? `<span class="absolute -top-2.5 -left-2.5 bg-emerald-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg flex items-center gap-1"><i class="fas fa-bell"></i> Pronto!</span>` : ''}
+                const estaChamando = !!chamadosGarcom[m.numero];
+                return `<button onclick="abrirMesaComoGarcom('${m.numero}')" class="relative text-left rounded-2xl p-4 border-2 transition ${estaChamando ? 'czk-mesa-chamando-sirene' : (temAlerta ? 'border-emerald-400 bg-emerald-900/30 animate-pulse' : (livre ? 'border-emerald-600/50 bg-emerald-900/10 hover:bg-emerald-900/25' : 'border-amber-500/60 bg-amber-900/15 hover:bg-amber-900/25'))}">
+                    ${estaChamando ? `<span class="czk-badge-chamando-garcom"><i class="fas fa-bell"></i> Chamando!</span>` : (temAlerta ? `<span class="absolute -top-2.5 -left-2.5 bg-emerald-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg flex items-center gap-1"><i class="fas fa-bell"></i> Pronto!</span>` : '')}
                     ${comandaAberta ? `<span onclick="verResumoMesaGarcom('${m.numero}', event)" title="Ver o que já foi pedido" class="absolute top-2.5 right-2.5 w-7 h-7 flex items-center justify-center rounded-full bg-black/30 hover:bg-black/50 text-amber-300 text-xs"><i class="fas fa-receipt"></i></span>` : ''}
                     <div class="flex items-center justify-between mb-2 pr-6">
                         <span class="font-bold text-white">${m.nome ? m.nome : `Mesa ${m.numero}`}</span>
@@ -10009,6 +10120,7 @@ ${esgotado ? '' : '<div class="badge-destaque-3d"><span class="fire-icon fire-3d
                     <p class="text-xs ${livre ? 'text-emerald-400' : 'text-amber-300'} font-semibold">${livre ? 'Livre' : `R$ ${comandaAberta.total.toFixed(2)}`}</p>
                     ${comandaAberta ? `<p class="text-[10px] text-white/40 mt-1">${comandaAberta.pedidosIds.length} pedido(s) · aberta às ${comandaAberta.abertaEm}</p>` : ''}
                     ${temAlerta ? `<p class="text-[11px] text-emerald-300 font-bold mt-1"><i class="fas fa-utensils"></i> ${pedidosProntos} item(ns) pronto(s) pra servir</p>` : ''}
+                    ${estaChamando ? `<button onclick="event.stopPropagation(); resolverChamadoGarcom('${m.numero}')" class="mt-2 w-full bg-red-600 hover:bg-red-500 text-white text-[11px] font-bold py-1.5 rounded-lg flex items-center justify-center gap-1.5"><i class="fas fa-check"></i> Verificar / Atender</button>` : ''}
                 </button>`;
             }).join('');
         }
@@ -10026,6 +10138,7 @@ ${esgotado ? '' : '<div class="badge-destaque-3d"><span class="fire-icon fire-3d
             modoGarcomAtivo = true;
             mesaAtual = numeroMesa;
             carrinho = [];
+            resolverChamadoGarcom(numeroMesa);
             document.getElementById("garcom-panel").style.display = "none";
             document.getElementById("app-cliente").style.display = "block";
             document.getElementById("cliente-nome-header").innerText = `Garçom: ${garcomLogado.nome || garcomLogado.login}`;
@@ -10100,6 +10213,14 @@ ${esgotado ? '' : '<div class="badge-destaque-3d"><span class="fire-icon fire-3d
             document.getElementById("app-cliente").classList.toggle("garcom-ativo", modoGarcomAtivo === true);
             const btnQuiosque = document.getElementById("btn-modo-quiosque");
             if(btnQuiosque) btnQuiosque.classList.toggle("hidden", modoGarcomAtivo === true);
+            // Botão "Chamar garçom": aparece na mesa fixa e no tablet volante (inclusive antes de
+            // identificar qual mesa é, no volante), mas NÃO quando é o próprio garçom lançando o
+            // pedido pelo painel dele (não faz sentido o garçom chamar a si mesmo).
+            const btnChamarGarcom = document.getElementById("btn-chamar-garcom-mesa");
+            if(btnChamarGarcom) {
+                btnChamarGarcom.classList.toggle("hidden", modoGarcomAtivo === true);
+                btnChamarGarcom.classList.toggle("czk-chamando", !modoGarcomAtivo && mesaAtual !== null && !!chamadosGarcom[mesaAtual]);
+            }
             czkAtivarWakeLock('mesa'); // mantém a tela da mesa/tablet do garçom sempre acordada
         }
 
@@ -10250,6 +10371,7 @@ ${esgotado ? '' : '<div class="badge-destaque-3d"><span class="fire-icon fire-3d
         let _czkValidadoMesaVolante = null;
         let _czkScannerInicioMs = null;
         let _czkScannerAvisouDemora = false;
+        let _czkScannerParaChamarGarcom = false; // true quando o QR está sendo escaneado pra CHAMAR o garçom, não pra enviar um pedido
 
         function abrirScannerMesaVolante(validado) {
             _czkValidadoMesaVolante = validado;
@@ -10310,7 +10432,7 @@ ${esgotado ? '' : '<div class="badge-destaque-3d"><span class="fire-icon fire-3d
             _czkScannerStream = stream;
             video.srcObject = stream;
             video.play();
-            statusEl.innerText = "Aponte a câmera pro QR Code da mesa.";
+            statusEl.innerText = _czkScannerParaChamarGarcom ? "Aponte a câmera pro QR Code da mesa que está chamando o garçom." : "Aponte a câmera pro QR Code da mesa.";
             _czkScannerCanvas = document.createElement("canvas");
             _czkScannerInicioMs = Date.now();
             _czkScannerRAF = requestAnimationFrame(tickScannerMesaVolante);
@@ -10346,6 +10468,7 @@ ${esgotado ? '' : '<div class="badge-destaque-3d"><span class="fire-icon fire-3d
             _czkValidadoMesaVolante = null;
             _czkScannerInicioMs = null;
             _czkScannerAvisouDemora = false;
+            _czkScannerParaChamarGarcom = false;
         }
         function tickScannerMesaVolante() {
             const video = document.getElementById("scanner-mesa-video");
@@ -10398,6 +10521,15 @@ ${esgotado ? '' : '<div class="badge-destaque-3d"><span class="fire-icon fire-3d
             document.getElementById("modal-scanner-mesa").style.display = "none";
             _czkScannerInicioMs = null;
             _czkScannerAvisouDemora = false;
+
+            // Modo "chamar garçom": só precisávamos identificar QUAL mesa está chamando —
+            // não mexe em mesaAtual/carrinho nem envia nada pra cozinha.
+            if (_czkScannerParaChamarGarcom) {
+                _czkScannerParaChamarGarcom = false;
+                dispararChamadoGarcom(mesaEncontrada.numero);
+                return;
+            }
+
             mesaAtual = mesaEncontrada.numero;
             try { sessionStorage.setItem("czk_modo_mesa_volante", "1"); } catch(e) {}
             aplicarModoMesaNaTela();
@@ -10414,16 +10546,19 @@ ${esgotado ? '' : '<div class="badge-destaque-3d"><span class="fire-icon fire-3d
                     const link = gerarLinkMesa(m.numero);
                     const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=${encodeURIComponent(link)}`;
                     const comandaAberta = comandas.find(c => String(c.mesa) === String(m.numero) && c.status === 'aberta');
-                    return `<div class="bg-black/30 rounded-xl p-4 flex flex-wrap gap-4 items-center justify-between border ${comandaAberta ? 'border-emerald-500/60' : 'border-white/10'}">
+                    const estaChamando = !!chamadosGarcom[m.numero];
+                    return `<div class="bg-black/30 rounded-xl p-4 flex flex-wrap gap-4 items-center justify-between border ${estaChamando ? 'czk-mesa-chamando-sirene' : (comandaAberta ? 'border-emerald-500/60' : 'border-white/10')}">
                         <div class="flex items-center gap-4">
                             <img src="${qrSrc}" alt="QR Mesa ${m.numero}" class="w-20 h-20 rounded-lg bg-white p-1">
                             <div>
                                 <p class="font-bold text-white">${m.nome ? m.nome : `Mesa ${m.numero}`}</p>
                                 <p class="text-xs text-white/50 break-all max-w-xs">${link}</p>
+                                ${estaChamando ? `<p class="text-xs text-red-400 font-bold mt-1"><i class="fas fa-bell"></i> Chamando o garçom!</p>` : ''}
                                 ${comandaAberta ? `<p class="text-xs text-emerald-400 font-bold mt-1"><i class="fas fa-circle text-[6px]"></i> Comanda aberta — R$ ${comandaAberta.total.toFixed(2)}</p>` : `<p class="text-xs text-white/40 mt-1">Livre</p>`}
                             </div>
                         </div>
                         <div class="flex flex-col gap-2 items-stretch">
+                            ${estaChamando ? `<button onclick="resolverChamadoGarcom('${m.numero}')" class="bg-red-600 hover:bg-red-500 px-4 py-1.5 rounded-lg text-xs font-bold"><i class="fas fa-check"></i> Verificar</button>` : ''}
                             <a href="${qrSrc}" target="_blank" class="bg-blue-700 hover:bg-blue-600 px-4 py-1.5 rounded-lg text-xs font-bold text-center"><i class="fas fa-qrcode"></i> Abrir/Imprimir QR</a>
                             ${comandaAberta ? `<button onclick="fecharComandaAdmin(${comandaAberta.id})" class="bg-emerald-700 hover:bg-emerald-600 px-4 py-1.5 rounded-lg text-xs font-bold"><i class="fas fa-check-double"></i> Fechar Comanda</button>` : ''}
                             <button onclick="removerMesaAdmin(${m.id})" class="bg-red-800/70 hover:bg-red-700 px-4 py-1.5 rounded-lg text-xs font-bold"><i class="fas fa-trash-alt"></i> Remover</button>
@@ -13855,6 +13990,7 @@ ${esgotado ? '' : '<div class="badge-destaque-3d"><span class="fire-icon fire-3d
             let locs = czkGet("czk_localizacoes_entregadores"); if(locs) localizacoesEntregadores = locs;
             let geocache = czkGet("czk_geocache_enderecos"); if(geocache) cacheGeocodeEnderecos = geocache;
             let chats = czkGet("czk_chat_entregadores"); if(chats) chatEntregadores = chats;
+            let chamados = czkGet("czk_chamados_garcom"); if(chamados) chamadosGarcom = chamados;
             carregarCidades();
             carregarConfigFundo();
             carregarTaxas();
