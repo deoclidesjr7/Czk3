@@ -181,50 +181,6 @@
         .glass-card-solid { background: rgba(255, 253, 246, 0.97); backdrop-filter: blur(12px); border: 1px solid rgba(16,26,44,0.14); box-shadow: 0 20px 45px -18px rgba(16,26,44,0.3); }
         /* Telas de login e cadastro: cartão em branco transparente, deixando a foto de fundo aparecer */
         #screen-login .glass-card, #screen-auth .glass-card { background: rgba(255, 253, 246, 0.92); backdrop-filter: blur(14px); }
-        
-        /* ===== FIX: CADASTRO RESPONSIVO (Mobile, Tablet, Desktop) ===== */
-        /* Problema: Formulário de cadastro travado em tamanho fixo */
-        /* Solução: Adaptar dinamicamente para cada dispositivo */
-        #screen-auth {
-            padding: 12px !important;
-            overflow-y: auto;
-        }
-        #screen-auth .glass-card {
-            width: 100%;
-            max-width: calc(100% - 24px);
-            max-height: 90vh;
-            overflow-y: auto;
-            animation: slideInCard 0.4s ease-out;
-        }
-        @media (min-width: 480px) {
-            #screen-auth .glass-card {
-                max-width: 420px;
-            }
-            #screen-auth {
-                padding: 20px !important;
-            }
-        }
-        @media (min-width: 768px) {
-            #screen-auth .glass-card {
-                max-width: 500px;
-            }
-        }
-        @media (min-width: 1024px) {
-            #screen-auth .glass-card {
-                max-width: 550px;
-            }
-        }
-        @keyframes slideInCard {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
         /* Painéis do admin/entregador agora seguem o mesmo creme do restante do app */
         #admin-panel, #entregador-panel { background-color: #f3e8ca !important; }
         /* Itens do menu do cliente (Meus Endereços/Configurações/Meus Pedidos/Suporte): fundo branco com
@@ -627,27 +583,6 @@
         }
         #admin-panel.czk-pedidos-tela-cheia #pedidos-ativos > .glass-card-solid {
             border-radius: 0; border: none; height: 100%; min-height: 100vh;
-            display: flex; flex-direction: column;
-        }
-        /* Faz a sub-aba "Em andamento" (a que tem as duas colunas Pedidos novos / Em andamento)
-           esticar e ocupar toda a altura que sobrar na tela cheia, em vez de ficar com uma altura
-           fixa em vh que deixava espaço em branco numa coluna e cortava a outra. As outras sub-abas
-           (Cancelamentos, Balcão, etc.) não recebem flex-grow, então continuam se comportando como
-           antes dentro desse mesmo cartão. */
-        #admin-panel.czk-pedidos-tela-cheia #subtab-andamento-conteudo {
-            flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column;
-        }
-        #admin-panel.czk-pedidos-tela-cheia #subtab-andamento-conteudo > .grid {
-            flex: 1 1 auto; min-height: 0;
-        }
-        #admin-panel.czk-pedidos-tela-cheia #subtab-andamento-conteudo > .grid > div {
-            display: flex; flex-direction: column; min-height: 0;
-        }
-        #admin-panel.czk-pedidos-tela-cheia #lista-pedidos-novos,
-        #admin-panel.czk-pedidos-tela-cheia #lista-pedidos-ativos {
-            max-height: none !important;
-            flex: 1 1 auto;
-            min-height: 0;
         }
 
         /* ===== Animações configuráveis do cardápio (aba Aparência do admin) ===== */
@@ -1091,83 +1026,6 @@
         @media (prefers-reduced-motion: reduce) {
             .czk-banner-neon, .czk-banner-neon i.czk-banner-neon-icon { animation: none; }
         }
-
-        /* ===== FIX: MODAIS CENTRALIZADOS NA VIEWPORT (todos os dispositivos) =====
-           Problema: contain: layout no #app-shell prende modais fixos dentro do container.
-           Solução: Forçar modais a usar a viewport real, não o container. ===== */
-
-        @media (min-width: 992px) {
-            /* Desktop: Modais centrados na viewport com !important */
-            #czk-modal-confirm,
-            #czk-modal-alert,
-            #czk-modal-prompt,
-            #modal-carrinho,
-            #modal-confirmar-pedido,
-            #modal-detalhe-produto,
-            #modal-novo-endereco,
-            #modal-enderecos,
-            #modal-config-conta,
-            #modal-historico-cliente,
-            #modal-suporte-cliente,
-            #modal-chat-suporte,
-            #modal-mapa-entrega,
-            #modal-pedido-enviado,
-            #czk-modal-cupom-cliente,
-            #modal-proprietario,
-            #modal-entregador,
-            #modal-oferta-combo,
-            #modal-ofertas-desconto,
-            #modal-pedido-cancelado {
-                position: fixed !important;
-                top: 50% !important;
-                left: 50% !important;
-                transform: translate(-50%, -50%) !important;
-                inset: auto !important;
-                right: auto !important;
-                bottom: auto !important;
-                width: calc(100% - 32px) !important;
-                max-width: 550px !important;
-                max-height: 90vh !important;
-                margin: 0 !important;
-                z-index: 9999 !important;
-            }
-        }
-
-        @media (max-width: 991px) {
-            /* Mobile/Tablet: Modais centrados com mais padding */
-            #czk-modal-confirm,
-            #czk-modal-alert,
-            #czk-modal-prompt,
-            #modal-carrinho,
-            #modal-confirmar-pedido,
-            #modal-detalhe-produto,
-            #modal-novo-endereco,
-            #modal-enderecos,
-            #modal-config-conta,
-            #modal-historico-cliente,
-            #modal-suporte-cliente,
-            #modal-chat-suporte,
-            #modal-mapa-entrega,
-            #modal-pedido-enviado,
-            #czk-modal-cupom-cliente,
-            #modal-proprietario,
-            #modal-entregador,
-            #modal-oferta-combo,
-            #modal-ofertas-desconto,
-            #modal-pedido-cancelado {
-                position: fixed !important;
-                top: 50% !important;
-                left: 50% !important;
-                transform: translate(-50%, -50%) !important;
-                inset: auto !important;
-                right: auto !important;
-                bottom: auto !important;
-                width: calc(100% - 24px) !important;
-                max-height: 90vh !important;
-                margin: 0 !important;
-                z-index: 9999 !important;
-            }
-        }
     </style>
 </head>
 <body>
@@ -1532,7 +1390,7 @@
 
                 <div id="subtab-andamento-conteudo">
                     <div class="flex justify-between items-center mb-5 flex-wrap gap-3"><h3 class="text-xl font-semibold text-blue-400"><i class="fas fa-concierge-bell"></i> Pedidos em andamento</h3><div class="relative w-full sm:w-80"><i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i><input type="text" id="busca-pedidos-ativos" oninput="renderPedidosAtivos()" placeholder="Buscar por nome, telefone, rua, nº do pedido ou comida" class="w-full rounded-xl pl-9 pr-3 py-2.5 bg-[#16243c] border border-blue-800 text-white text-sm placeholder-slate-500"></div></div>
-                    <div class="grid md:grid-cols-2 gap-5"><div><h4 class="text-sm font-bold text-yellow-400 mb-3 flex items-center gap-2"><i class="fas fa-bell"></i> Pedidos novos <span id="contador-pedidos-novos" class="bg-yellow-500/20 text-yellow-300 text-xs px-2 py-0.5 rounded-full">0</span></h4><div id="lista-pedidos-novos" class="space-y-4 max-h-[68vh] overflow-y-auto"></div></div><div><h4 class="text-sm font-bold text-blue-400 mb-3 flex items-center gap-2"><i class="fas fa-fire"></i> Em andamento <span id="contador-pedidos-andamento" class="bg-blue-500/20 text-blue-300 text-xs px-2 py-0.5 rounded-full">0</span></h4><div id="lista-pedidos-ativos" class="space-y-4 max-h-[68vh] overflow-y-auto"></div></div></div>
+                    <div class="grid md:grid-cols-2 gap-5"><div><h4 class="text-sm font-bold text-yellow-400 mb-3 flex items-center gap-2"><i class="fas fa-bell"></i> Pedidos novos <span id="contador-pedidos-novos" class="bg-yellow-500/20 text-yellow-300 text-xs px-2 py-0.5 rounded-full">0</span></h4><div id="lista-pedidos-novos" class="space-y-4 max-h-[55vh] overflow-y-auto"></div></div><div><h4 class="text-sm font-bold text-blue-400 mb-3 flex items-center gap-2"><i class="fas fa-fire"></i> Em andamento <span id="contador-pedidos-andamento" class="bg-blue-500/20 text-blue-300 text-xs px-2 py-0.5 rounded-full">0</span></h4><div id="lista-pedidos-ativos" class="space-y-4 max-h-[55vh] overflow-y-auto"></div></div></div>
                 </div>
 
                 <div id="subtab-cancelamentos-conteudo" style="display:none;">
