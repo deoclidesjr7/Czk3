@@ -6675,9 +6675,8 @@ ${esgotado ? '' : '<div class="badge-destaque-3d"><span class="fire-icon fire-3d
         function finalizarPedidoAdmin(pedidoId) {
             const pedido = historicoPedidos.find(p => p.id == pedidoId);
             const ehRetirada = pedido && pedido.tipoEntrega === 'retirada';
-            const ehMesa = pedido && pedido.tipoEntrega === 'mesa';
             atualizarStatusPedido(pedidoId, "Pedido finalizado");
-            czkAlert(ehRetirada ? "Pedido finalizado! Aguardando o cliente retirar na loja (aba Retirada)." : (ehMesa ? "Pedido finalizado! Agora disponível para o garçom servir." : "Pedido finalizado! Agora disponível para entregador."));
+            czkAlert(ehRetirada ? "Pedido finalizado! Aguardando o cliente retirar na loja (aba Retirada)." : "Pedido finalizado! Agora disponível para entregador.");
             renderPedidosAtivos(); renderPedidosDisponiveis(); renderControleEntregas(); renderPedidosRetiradaAdmin(); renderBalcaoAdmin();
         }
         // Atribui o pedido diretamente a um entregador específico, pulando o "pool" de
