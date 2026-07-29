@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>CZK MAKI</title>
 
     <!-- ===================== Prévia de link (WhatsApp, redes sociais, etc.) =====================
@@ -68,6 +68,31 @@
         * { box-sizing: border-box; }
         body { font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; background: #101a2c; }
         h1, h2, h3 { font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; }
+
+        /* =====================================================================
+           SENSAÇÃO DE APP NATIVO (não de site aberto num navegador/WebView) =====
+           Isso não muda nada visualmente "de layout" — só tira comportamentos
+           que só existem em navegador e denunciam que é um site:
+           - "Elástico"/bounce ao puxar o topo ou o fim da página (parece Safari/Chrome)
+           - Seleção de texto ao tocar e segurar (parece leitura de página, não app)
+           - Menu de "salvar imagem/copiar link" ao segurar em imagem/link
+           - Brilho azul/cinza padrão do navegador ao tocar em botões/links
+           - Barra de rolagem visível (Android/desktop mostram uma faixinha cinza)
+           Campos de formulário (input/textarea/select) continuam com seleção de
+           texto normal, senão o cliente não consegue nem editar o que digitou. */
+        html, body {
+            overscroll-behavior: none;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        input, textarea, select, [contenteditable="true"] {
+            -webkit-user-select: text;
+            user-select: text;
+        }
+        ::-webkit-scrollbar { width: 0; height: 0; display: none; }
+        * { scrollbar-width: none; }
 
         /* ===== Fundo: hero desativado, backdrop creme sólido (telas do cliente) ===== */
         .hero-bg { display: block; position: fixed; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; }
@@ -526,6 +551,8 @@
         .popup-cancelamento .popup-pedido-content { border-color: #b91c1c; }
         .btn-popup-verde { background: #16a34a; color: #fff; font-weight: 700; padding: 10px 18px; border-radius: 12px; width: 100%; }
         .btn-popup-verde:hover { background: #15803d; }
+        .btn-popup-laranja { background: #ea580c; color: #fff; font-weight: 700; padding: 10px 18px; border-radius: 12px; width: 100%; margin-top: 8px; }
+        .btn-popup-laranja:hover { background: #c2410c; }
         @keyframes czkFadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         /* ===== Sub-abas do modal de suporte do cliente (Histórico de chat / Pedidos cancelados) ===== */
@@ -620,9 +647,6 @@
         }
         .progress-line { flex: 1; height: 2px; background: #d9cca0; margin: 0 -5px; z-index: 0; transition: background 0.3s; }
         .progress-line.completed { background: #16233d; }
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: #f3e8ca; }
-        ::-webkit-scrollbar-thumb { background: #16233d; border-radius: 10px; }
         .password-toggle { position: relative; }
         .password-toggle .toggle-btn { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: transparent; border: none; color: #6b6248; cursor: pointer; font-size: 16px; }
         .password-toggle .toggle-btn:hover { color: #16233d; }
@@ -1162,6 +1186,7 @@
                     <button id="subtab-btn-retirada" onclick="switchSubTabPedidos('retirada')" class="subtab-pedidos-btn px-4 py-1.5 rounded-full text-white/70 hover:text-white text-sm font-semibold flex items-center gap-2"><i class="fas fa-shopping-bag text-orange-400"></i> Retirada <span id="contador-retirada-badge" class="hidden bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">0</span></button>
                     <button id="subtab-btn-balcao" onclick="switchSubTabPedidos('balcao')" class="subtab-pedidos-btn px-4 py-1.5 rounded-full text-white/70 hover:text-white text-sm font-semibold flex items-center gap-2"><i class="fas fa-cash-register text-amber-400"></i> Balcão <span id="contador-balcao-badge" class="hidden bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">0</span></button>
                     <button id="subtab-btn-finalizados" onclick="switchSubTabPedidos('finalizados')" class="subtab-pedidos-btn px-4 py-1.5 rounded-full text-white/70 hover:text-white text-sm font-semibold flex items-center gap-2"><i class="fas fa-check-double text-emerald-400"></i> Finalizados</button>
+                    <button id="btn-tela-cheia-pedidos" onclick="czkToggleTelaCheiaPedidos()" title="Tela cheia (mais espaço pra ver os pedidos)" class="ml-auto px-3 py-1.5 rounded-full text-white/70 hover:text-white hover:bg-white/10 text-sm font-semibold flex items-center gap-2 border border-white/15"><i id="icone-tela-cheia-pedidos" class="fas fa-expand"></i></button>
                 </div>
                 <hr class="border-white/15 mb-6">
 
@@ -3595,6 +3620,9 @@
         // Controla quais comandas estão com o painel "Servir itens" aberto no balcão (pro dono
         // que trabalha sozinho, sem garçom, atender as mesas direto do balcão/tablet).
         let balcaoItensExpandidos = {};
+        // Mesmo controle de "expandido/recolhido", só que pra tela "Em andamento" (por pedido,
+        // não por comanda inteira como no Balcão — aqui cada card já é um pedido individual).
+        let andamentoItensExpandidos = {};
         let modoMesaAtivo = false; // true quando o cardápio foi aberto via QR Code de uma mesa (?mesa=NUMERO) OU pelo painel do garçom
         let mesaAtual = null; // número/id da mesa em modo mesa (string)
         let garcons = []; // [{ id, login, senha, nome }]
@@ -4326,15 +4354,29 @@
         // =========================================================================
         //  BARRA DE PROGRESSO
         // =========================================================================
-        function renderProgressBar(status) {
-            const steps = [
+        function renderProgressBar(status, tipoEntrega) {
+            // Pedido de RETIRADA: não existe "corrida"/entregador, então a barra usa só 4 etapas,
+            // terminando em "Cliente retirou" (em vez de "Saiu para entrega" + "Entrega finalizada",
+            // que são específicas de quem recebe em casa).
+            const ehRetirada = tipoEntrega === 'retirada';
+            const steps = ehRetirada ? [
+                { key: 'enviado', label: 'Pedido\nenviado', icon: 'fa-check' },
+                { key: 'preparo', label: 'Em\npreparo', icon: 'fa-fire' },
+                { key: 'finalizado', label: 'Pedido\nfinalizado', icon: 'fa-check-double' },
+                { key: 'retirou', label: 'Cliente\nretirou', icon: 'fa-store' }
+            ] : [
                 { key: 'enviado', label: 'Pedido\nenviado', icon: 'fa-check' },
                 { key: 'preparo', label: 'Em\npreparo', icon: 'fa-fire' },
                 { key: 'finalizado', label: 'Pedido\nfinalizado', icon: 'fa-check-double' },
                 { key: 'saiu', label: 'Saiu para\nentrega', icon: 'fa-motorcycle' },
                 { key: 'entregue', label: 'Entrega\nfinalizada', icon: 'fa-home' }
             ];
-            const statusIndexMap = {
+            const statusIndexMap = ehRetirada ? {
+                'Em preparo': 0,
+                'Em produção': 1,
+                'Pedido finalizado': 2,
+                'Cliente retirou': 3
+            } : {
                 'Em preparo': 0,
                 'Em produção': 1,
                 'Cliente não encontrado': 1,
@@ -4421,7 +4463,7 @@
                                    <p class="text-red-400 font-bold text-sm"><i class="fas fa-ban"></i> Pedido cancelado</p>
                                    ${!(p.metodo || '').includes('na entrega') ? `<p class="text-white/50 text-xs mt-1">Aguarde até 24h para o estorno dos valores.</p>` : ''}
                                </div>`
-                            : renderProgressBar(p.status || 'Em preparo')}
+                            : renderProgressBar(p.status || 'Em preparo', p.tipoEntrega)}
                         <div class="mt-2 text-sm text-white/80"><strong>Itens:</strong><div class="text-xs text-white/60">${p.itens.map(i=>`• ${i}`).join('<br>')}</div></div>
                         ${renderAreaCancelamentoCliente(p)}
                     </div>
@@ -4460,14 +4502,20 @@
                 const totalItens = itens.length;
                 const qtdServidos = servidoStatus.filter(Boolean).length;
                 const tudoServido = totalItens > 0 ? (qtdServidos === totalItens) : !!p.servidoEm;
-                const corCabecalho = tudoServido ? 'text-emerald-400' : (pronto ? 'text-emerald-300' : 'text-blue-300');
+                const corCabecalho = tudoServido ? 'text-emerald-400' : ((qtdServidos > 0 || pronto) ? 'text-emerald-300' : 'text-blue-300');
+                // Texto do cabeçalho: mostra progresso de itens servidos assim que existir algum
+                // (mesmo com o pedido ainda "Em produção" — a cozinha pode liberar um item de
+                // cada vez, não precisa esperar o pedido inteiro ficar pronto pra começar a servir).
                 let textoCabecalho;
-                if (!pronto) textoCabecalho = p.status;
-                else if (tudoServido) textoCabecalho = 'Servido';
+                if (tudoServido) textoCabecalho = 'Servido';
                 else if (totalItens > 0 && qtdServidos > 0) textoCabecalho = `🔔 ${qtdServidos} de ${totalItens} itens servidos`;
-                else textoCabecalho = '🔔 Pronto — aguardando ser servido';
+                else if (pronto) textoCabecalho = '🔔 Pronto — aguardando ser servido';
+                else textoCabecalho = p.status;
 
-                const mostrarDetalheItens = pronto && totalItens > 1;
+                // Antes só aparecia com o pedido inteiro "Pedido finalizado" — agora aparece
+                // sempre que o pedido tiver mais de um item, pra dar pra marcar cada prato
+                // conforme a cozinha for liberando, sem depender do pedido inteiro estar pronto.
+                const mostrarDetalheItens = totalItens > 1;
 
                 const cabecalhoHtml = `
                 <div class="flex items-center justify-between gap-2 py-1.5 ${mostrarDetalheItens ? '' : 'border-b border-white/10 last:border-0'}">
@@ -4475,7 +4523,7 @@
                         <p class="text-xs font-bold text-white">${formatarNumeroPedido(p)}</p>
                         <p class="text-[11px] ${corCabecalho}">${textoCabecalho}</p>
                     </div>
-                    ${mostrarDetalheItens ? (tudoServido ? '' : (interativo ? `<button onclick="marcarTodosItensPedidoServido(${p.id})" class="text-emerald-300 text-[10px] font-semibold underline whitespace-nowrap">marcar todos</button>` : '')) : (pronto ? (tudoServido ? `<span class="text-emerald-500 text-[11px]"><i class="fas fa-check-double"></i></span>` : (interativo ? `<button onclick="marcarPedidoServido(${p.id})" class="bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold px-3 py-1.5 rounded-lg whitespace-nowrap"><i class="fas fa-check"></i> Servido</button>` : `<span class="text-amber-400 text-[11px] font-semibold">⏳ Falta</span>`)) : '')}
+                    ${mostrarDetalheItens ? (tudoServido ? '' : (interativo ? `<button onclick="marcarTodosItensPedidoServido(${p.id})" class="text-emerald-300 text-[10px] font-semibold underline whitespace-nowrap">marcar todos</button>` : '')) : (tudoServido ? `<span class="text-emerald-500 text-[11px]"><i class="fas fa-check-double"></i></span>` : (interativo ? `<button onclick="marcarPedidoServido(${p.id})" class="bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold px-3 py-1.5 rounded-lg whitespace-nowrap"><i class="fas fa-check"></i> Servido</button>` : `<span class="text-amber-400 text-[11px] font-semibold">⏳ Falta</span>`))}
                 </div>`;
 
                 // Quando o pedido tem mais de um item, mostra uma linha (e um botão "Servido"
@@ -6189,7 +6237,7 @@ ${esgotado ? '' : '<div class="badge-destaque-3d"><span class="fire-icon fire-3d
             const contadorAndamento = document.getElementById("contador-pedidos-andamento");
             if(contadorAndamento) contadorAndamento.innerText = andamento.length;
             if(container) {
-                container.innerHTML = andamento.length === 0 ? "<p class='text-center text-white/50 py-4'>Nenhum pedido em andamento.</p>" : andamento.map(p => `<div class="bg-black/40 p-4 rounded-xl border ${p.cancelamentoPendente ? 'border-red-600 ring-1 ring-red-600/60' : (p.status === 'Cliente não encontrado' ? 'border-red-500 ring-1 ring-red-500/60' : (p.tipoEntrega === 'retirada' ? 'border-orange-500/70' : 'border-blue-800/50'))}">${p.cancelamentoPendente ? '<p class="text-red-400 text-xs font-bold mb-2"><i class="fas fa-exclamation-triangle"></i> Cliente solicitou cancelamento — veja a aba Cancelamentos</p>' : ''}${p.status === 'Cliente não encontrado' ? `<p class="text-red-400 text-xs font-bold mb-2"><i class="fas fa-user-slash"></i> O entregador não encontrou o cliente — pedido voltou pra loja. Reatribua um entregador ou entre em contato.</p>` : ''}<div class="flex justify-between items-start flex-wrap gap-2"><div><p class="text-xs font-bold text-blue-400 mb-1">${formatarNumeroPedido(p)}${czkBadgeRetiradaPedido(p)}</p><p class="text-white font-bold"><i class="fas fa-user"></i> ${p.clienteNome}</p>${czkLinhaEnderecoPedido(p)}<p class="text-sm text-white/60"><i class="fab fa-whatsapp text-green-400"></i> ${p.whatsapp}</p><p class="text-sm text-white/60"><i class="fas fa-credit-card"></i> Pagamento: ${p.metodo}</p>${czkExtrasPedidoHTML(p)}<p class="text-xs ${p.status === 'Cliente não encontrado' ? 'text-red-400' : 'text-blue-300'} font-bold mt-1">Status: ${p.status}</p></div><div><p class="font-bold text-blue-400">R$ ${p.total.toFixed(2)}</p><button onclick="finalizarPedidoAdmin(${p.id})" class="bg-white hover:bg-gray-200 text-[#16233d] border border-blue-300 px-4 py-1.5 rounded-lg text-sm mt-2 font-bold"><i class="fas fa-check-double"></i> Finalizar Pedido</button><button onclick="imprimirPedido(${p.id})" class="bg-blue-700 hover:bg-blue-600 px-4 py-1.5 rounded-lg text-sm mt-2 ml-1 font-bold"><i class="fas fa-print"></i></button></div></div><div class="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-white/10">${p.tipoEntrega === 'retirada' ? `<p class="text-xs text-orange-300"><i class="fas fa-store"></i> Pedido de retirada — não precisa atribuir entregador.</p>` : (p.tipoEntrega === 'mesa' ? `<select id=\"garcom-direto-${p.id}\" class=\"rounded-lg p-2 text-sm text-white border-blue-800 bg-[#16233d]\"><option value=\"\">Selecione o garçom...</option>${garcons.map(g => `<option value=\"${g.login}\">${g.nome || g.login}</option>`).join('')}</select><button onclick=\"atribuirAoGarcomAdmin(${p.id})\" class=\"bg-purple-600 hover:bg-purple-500 text-white px-4 py-1.5 rounded-lg text-sm font-bold\"><i class=\"fas fa-concierge-bell\"></i> Atribuir</button>` : `<select id="entregador-direto-${p.id}" class="rounded-lg p-2 text-sm text-white border-blue-800 bg-[#16233d]"><option value="">Selecione o entregador...</option>${entregadores.map(e => `<option value="${e.login}">${e.login}</option>`).join('')}</select><button onclick="entregarParaEntregadorAdmin(${p.id})" class="bg-green-600 hover:bg-green-500 text-white px-4 py-1.5 rounded-lg text-sm font-bold"><i class="fas fa-motorcycle"></i> Entregar para</button>`)}</div><div class="mt-2 text-sm text-white/80"><strong>Itens:</strong><div class="text-xs text-white/60 mt-1">${p.itens.map(i=>`• ${i}`).join('<br>')}</div></div></div>`).join('');
+                container.innerHTML = andamento.length === 0 ? "<p class='text-center text-white/50 py-4'>Nenhum pedido em andamento.</p>" : andamento.map(p => `<div class="bg-black/40 p-4 rounded-xl border ${p.cancelamentoPendente ? 'border-red-600 ring-1 ring-red-600/60' : (p.status === 'Cliente não encontrado' ? 'border-red-500 ring-1 ring-red-500/60' : (p.tipoEntrega === 'retirada' ? 'border-orange-500/70' : 'border-blue-800/50'))}">${p.cancelamentoPendente ? '<p class="text-red-400 text-xs font-bold mb-2"><i class="fas fa-exclamation-triangle"></i> Cliente solicitou cancelamento — veja a aba Cancelamentos</p>' : ''}${p.status === 'Cliente não encontrado' ? `<p class="text-red-400 text-xs font-bold mb-2"><i class="fas fa-user-slash"></i> O entregador não encontrou o cliente — pedido voltou pra loja. Reatribua um entregador ou entre em contato.</p>` : ''}<div class="flex justify-between items-start flex-wrap gap-2"><div><p class="text-xs font-bold text-blue-400 mb-1">${formatarNumeroPedido(p)}${czkBadgeRetiradaPedido(p)}</p><p class="text-white font-bold"><i class="fas fa-user"></i> ${p.clienteNome}</p>${czkLinhaEnderecoPedido(p)}<p class="text-sm text-white/60"><i class="fab fa-whatsapp text-green-400"></i> ${p.whatsapp}</p><p class="text-sm text-white/60"><i class="fas fa-credit-card"></i> Pagamento: ${p.metodo}</p>${czkExtrasPedidoHTML(p)}<p class="text-xs ${p.status === 'Cliente não encontrado' ? 'text-red-400' : 'text-blue-300'} font-bold mt-1">Status: ${p.status}</p></div><div><p class="font-bold text-blue-400">R$ ${p.total.toFixed(2)}</p><button onclick="finalizarPedidoAdmin(${p.id})" class="bg-white hover:bg-gray-200 text-[#16233d] border border-blue-300 px-4 py-1.5 rounded-lg text-sm mt-2 font-bold"><i class="fas fa-check-double"></i> Finalizar Pedido</button><button onclick="imprimirPedido(${p.id})" class="bg-blue-700 hover:bg-blue-600 px-4 py-1.5 rounded-lg text-sm mt-2 ml-1 font-bold"><i class="fas fa-print"></i></button></div></div><div class="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-white/10">${p.tipoEntrega === 'retirada' ? `<p class="text-xs text-orange-300"><i class="fas fa-store"></i> Pedido de retirada — não precisa atribuir entregador.</p>` : (p.tipoEntrega === 'mesa' ? `<select id=\"garcom-direto-${p.id}\" class=\"rounded-lg p-2 text-sm text-white border-blue-800 bg-[#16233d]\"><option value=\"\">Selecione o garçom...</option>${garcons.map(g => `<option value=\"${g.login}\">${g.nome || g.login}</option>`).join('')}</select><button onclick=\"atribuirAoGarcomAdmin(${p.id})\" class=\"bg-purple-600 hover:bg-purple-500 text-white px-4 py-1.5 rounded-lg text-sm font-bold\"><i class=\"fas fa-concierge-bell\"></i> Atribuir</button>` : `<select id="entregador-direto-${p.id}" class="rounded-lg p-2 text-sm text-white border-blue-800 bg-[#16233d]"><option value="">Selecione o entregador...</option>${entregadores.map(e => `<option value="${e.login}">${e.login}</option>`).join('')}</select><button onclick="entregarParaEntregadorAdmin(${p.id})" class="bg-green-600 hover:bg-green-500 text-white px-4 py-1.5 rounded-lg text-sm font-bold"><i class="fas fa-motorcycle"></i> Entregar para</button>`)}</div>${p.tipoEntrega === 'mesa' ? `<div class="mt-3 pt-3 border-t border-white/10"><button onclick="toggleItensAndamento(${p.id})" class="bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold px-3 py-2 rounded-lg"><i class="fas fa-concierge-bell"></i> ${andamentoItensExpandidos[p.id] ? 'Esconder itens' : 'Servir itens'}</button>${andamentoItensExpandidos[p.id] ? `<div class="mt-2">${gerarStatusItensPedidosMesaHTML([p])}</div>` : ''}</div>` : ''}<div class="mt-2 text-sm text-white/80"><strong>Itens:</strong><div class="text-xs text-white/60 mt-1">${p.itens.map(i=>`• ${i}`).join('<br>')}</div></div></div>`).join('');
             }
         }
         function aceitarPedidoAdmin(pedidoId) { atualizarStatusPedido(pedidoId, "Em produção"); }
@@ -6273,10 +6321,14 @@ ${esgotado ? '' : '<div class="badge-destaque-3d"><span class="fire-icon fire-3d
         //  "entregador não encontrou o cliente".
         // =====================================================================================
         const STATUS_EXCLUSIVOS_ENTREGA = ["Saiu para entrega", "Entrega finalizada", "Cliente não encontrado"];
+        // "Cliente retirou" é o status final exclusivo de pedidos de RETIRADA — substitui, só
+        // pra esse tipo de pedido, os status "Saiu para entrega"/"Entrega finalizada" (que não
+        // fazem sentido pra quem vem buscar na loja, já que não tem entregador nem corrida).
+        const STATUS_EXCLUSIVOS_RETIRADA = ["Cliente retirou"];
         function pedidoPodeIrParaEntregador(pedido) {
             return !!pedido && pedido.tipoEntrega !== 'retirada' && pedido.tipoEntrega !== 'mesa';
         }
-        function atualizarStatusPedido(pedidoId, novoStatus, entregadorLogin = null) { const pedido = historicoPedidos.find(p => p.id == pedidoId); if(pedido) { if(STATUS_EXCLUSIVOS_ENTREGA.includes(novoStatus) && !pedidoPodeIrParaEntregador(pedido)) { console.warn(`Bloqueado: tentativa de mandar pedido ${formatarNumeroPedido(pedido)} (tipo: ${pedido.tipoEntrega}) para o status "${novoStatus}", exclusivo de entrega.`); czkAlert(`Pedido ${formatarNumeroPedido(pedido)} é de ${pedido.tipoEntrega === 'retirada' ? 'retirada' : 'mesa'} — não pode receber o status "${novoStatus}".`); return; } pedido.status = novoStatus; if(entregadorLogin !== null) pedido.entregador = entregadorLogin; if((novoStatus === "Pedido finalizado" || novoStatus === "Saiu para entrega" || novoStatus === "Entrega finalizada" || novoStatus === "Cliente não encontrado") && !pedido.dataHoraPedidoPronto) pedido.dataHoraPedidoPronto = Date.now(); if(novoStatus === "Saiu para entrega" && !pedido.dataHoraAceite) pedido.dataHoraAceite = Date.now(); if(novoStatus === "Entrega finalizada" || novoStatus === "Cliente não encontrado") pedido.dataHoraFinalizado = Date.now(); czkSave("czk_pedidos", historicoPedidos); renderPedidosAtivos(); renderHistorico(); renderPedidosDisponiveis(); renderMinhasEntregas(); renderControleEntregas(); renderPedidosFinalizadosAdmin(); renderPedidosRetiradaAdmin(); renderBalcaoAdmin(); renderCozinhaPainel(); czkProcessarStatusPedido(pedido, novoStatus); } }
+        function atualizarStatusPedido(pedidoId, novoStatus, entregadorLogin = null) { const pedido = historicoPedidos.find(p => p.id == pedidoId); if(pedido) { if(STATUS_EXCLUSIVOS_ENTREGA.includes(novoStatus) && !pedidoPodeIrParaEntregador(pedido)) { console.warn(`Bloqueado: tentativa de mandar pedido ${formatarNumeroPedido(pedido)} (tipo: ${pedido.tipoEntrega}) para o status "${novoStatus}", exclusivo de entrega.`); czkAlert(`Pedido ${formatarNumeroPedido(pedido)} é de ${pedido.tipoEntrega === 'retirada' ? 'retirada' : 'mesa'} — não pode receber o status "${novoStatus}".`); return; } if(STATUS_EXCLUSIVOS_RETIRADA.includes(novoStatus) && pedido.tipoEntrega !== 'retirada') { console.warn(`Bloqueado: tentativa de mandar pedido ${formatarNumeroPedido(pedido)} (tipo: ${pedido.tipoEntrega}) para o status "${novoStatus}", exclusivo de retirada.`); czkAlert(`Pedido ${formatarNumeroPedido(pedido)} não é de retirada — não pode receber o status "${novoStatus}".`); return; } pedido.status = novoStatus; if(entregadorLogin !== null) pedido.entregador = entregadorLogin; if((novoStatus === "Pedido finalizado" || novoStatus === "Saiu para entrega" || novoStatus === "Entrega finalizada" || novoStatus === "Cliente não encontrado") && !pedido.dataHoraPedidoPronto) pedido.dataHoraPedidoPronto = Date.now(); if(novoStatus === "Saiu para entrega" && !pedido.dataHoraAceite) pedido.dataHoraAceite = Date.now(); if(novoStatus === "Entrega finalizada" || novoStatus === "Cliente não encontrado" || novoStatus === "Cliente retirou") pedido.dataHoraFinalizado = Date.now(); czkSave("czk_pedidos", historicoPedidos); renderPedidosAtivos(); renderHistorico(); renderPedidosDisponiveis(); renderMinhasEntregas(); renderControleEntregas(); renderPedidosFinalizadosAdmin(); renderPedidosRetiradaAdmin(); renderBalcaoAdmin(); renderCozinhaPainel(); czkProcessarStatusPedido(pedido, novoStatus); } }
 
         // Dispara as notificações push certas e liga/desliga o rastreio de localização conforme o status do pedido.
         // ===== ATUALIZADO: Apenas 2 notificações ao cliente =====
@@ -6312,8 +6364,15 @@ ${esgotado ? '' : '<div class="badge-destaque-3d"><span class="fire-icon fire-3d
                 // Apenas notifica o admin que entrega foi concluída (sem notificar cliente)
                 czkNotificarPush('admin', null, 'Entrega concluída ✅', `O pedido de ${pedido.clienteNome} foi entregue.`, { pedidoId: pedido.id });
             }
+            // ✅ NOTIFICAÇÃO — pedido de retirada: avisa o cliente que a retirada foi confirmada
+            // (diferente da entrega, aqui o cliente É notificado, pra ele saber que já foi
+            // registrado como "retirado" caso tenha alguma dúvida/reclamação depois).
+            else if(novoStatus === "Cliente retirou") {
+                czkNotificarPush('cliente', pedido.clienteId, 'Retirada confirmada! ✅', 'Seu pedido foi entregue a você na loja. Bom apetite! 🍣', { pedidoId: pedido.id });
+                czkNotificarPush('admin', null, 'Retirada concluída ✅', `O pedido de ${pedido.clienteNome} foi retirado na loja.`, { pedidoId: pedido.id });
+            }
         }
-        function exibirPopupNovoPedido(pedidoId) { if(document.querySelector(".popup-pedido")) return; czkTocarSom('pedido'); const pedidoRef = historicoPedidos.find(p => p.id == pedidoId); const popup = document.createElement("div"); popup.className = "popup-pedido"; popup.innerHTML = `<div class="popup-pedido-content"><i class="fas fa-bell text-blue-500 text-4xl mb-3"></i><h3 class="text-xl font-bold text-white mb-2">Novo Pedido ${formatarNumeroPedido(pedidoRef)}!</h3><p class="text-white/70 mb-4">Um cliente acabou de realizar um pedido.</p><button class="btn-popup-verde" onclick="this.closest('.popup-pedido').remove();">Pedido recebido, em produção...</button></div>`; document.body.appendChild(popup); popup.querySelector("button").addEventListener("click", () => { atualizarStatusPedido(pedidoId, "Em produção"); popup.remove(); }); }
+        function exibirPopupNovoPedido(pedidoId) { if(document.querySelector(".popup-pedido")) return; czkTocarSom('pedido'); const pedidoRef = historicoPedidos.find(p => p.id == pedidoId); const popup = document.createElement("div"); popup.className = "popup-pedido"; popup.innerHTML = `<div class="popup-pedido-content"><i class="fas fa-bell text-blue-500 text-4xl mb-3"></i><h3 class="text-xl font-bold text-white mb-2">Novo Pedido ${formatarNumeroPedido(pedidoRef)}!</h3><p class="text-white/70 mb-4">Um cliente acabou de realizar um pedido.</p><button class="btn-popup-verde" id="btn-popup-aceitar-${pedidoId}">Pedido recebido, em produção...</button><button class="btn-popup-laranja" id="btn-popup-aguardar-${pedidoId}">Aguardar</button></div>`; document.body.appendChild(popup); document.getElementById(`btn-popup-aceitar-${pedidoId}`).addEventListener("click", () => { atualizarStatusPedido(pedidoId, "Em produção"); popup.remove(); }); document.getElementById(`btn-popup-aguardar-${pedidoId}`).addEventListener("click", () => { popup.remove(); }); }
 
         // =========================================================================
         //  CANCELAMENTO DE PEDIDO PELO CLIENTE
@@ -6328,7 +6387,7 @@ ${esgotado ? '' : '<div class="badge-destaque-3d"><span class="fire-icon fire-3d
         function podeCancelarPedido(pedido) {
             if(!pedido) return false;
             if(pedido.status === 'Cancelado') return false;
-            if(pedido.status === 'Entrega finalizada') return false;
+            if(pedido.status === 'Entrega finalizada' || pedido.status === 'Cliente retirou') return false;
             return true;
         }
 
@@ -6757,7 +6816,7 @@ ${esgotado ? '' : '<div class="badge-destaque-3d"><span class="fire-icon fire-3d
         // Marca que o cliente já veio buscar o pedido na loja — tira o pedido da sub-aba
         // "Retirada" e fecha o ciclo dele (continua aparecendo em "Finalizados"/Histórico).
         function marcarPedidoRetiradoAdmin(pedidoId) {
-            atualizarStatusPedido(pedidoId, "Entrega finalizada");
+            atualizarStatusPedido(pedidoId, "Cliente retirou");
             czkAlert("Pedido marcado como retirado pelo cliente!");
             renderPedidosRetiradaAdmin(); renderBalcaoAdmin();
         }
@@ -6835,6 +6894,14 @@ ${esgotado ? '' : '<div class="badge-destaque-3d"><span class="fire-icon fire-3d
         function toggleItensBalcao(comandaId) {
             balcaoItensExpandidos[comandaId] = !balcaoItensExpandidos[comandaId];
             renderBalcaoAdmin();
+        }
+
+        // Mesma ideia do toggleItensBalcao, só que pra tela "Em andamento" — permite marcar os
+        // itens de um pedido de mesa como servidos direto ali, sem precisar antes clicar em
+        // "Finalizar Pedido" e trocar pra aba Balcão.
+        function toggleItensAndamento(pedidoId) {
+            andamentoItensExpandidos[pedidoId] = !andamentoItensExpandidos[pedidoId];
+            renderPedidosAtivos();
         }
 
         // =========================================================================
@@ -7212,7 +7279,7 @@ ${esgotado ? '' : '<div class="badge-destaque-3d"><span class="fire-icon fire-3d
                 </div>`;
             }).join('');
         }
-        function renderHistorico() { let pedidosFiltrados = historicoPedidos; if(filtroDataUnica) { const [ano,mes,dia] = filtroDataUnica.split('-'); const dataStr = `${dia}/${mes}/${ano}`; pedidosFiltrados = pedidosFiltrados.filter(p => p.data === dataStr); } if(buscaHistoricoTexto) { const termo = buscaHistoricoTexto.trim().toLowerCase(); pedidosFiltrados = pedidosFiltrados.filter(p => { const numero = (formatarNumeroPedido(p) || "").toLowerCase(); const nome = (p.clienteNome || p.cliente || "").toLowerCase(); const whatsapp = (p.whatsapp || "").toLowerCase(); const endereco = `${p.endereco || ""} ${p.cidade || ""}`.toLowerCase(); const itens = (p.itens || []).join(" ").toLowerCase(); return numero.includes(termo) || nome.includes(termo) || whatsapp.includes(termo) || endereco.includes(termo) || itens.includes(termo); }); } const container = document.getElementById("historico-pedidos"); if(!container) return; if(pedidosFiltrados.length === 0) { container.innerHTML = "<p class='text-center text-white/50'>Nenhum pedido encontrado.</p>"; return; } container.innerHTML = pedidosFiltrados.map(p => `<div class="bg-black/40 p-4 rounded-xl border border-blue-800/50"><div class="flex justify-between flex-wrap gap-2 border-b border-white/15 pb-2 mb-2"><p class="text-white font-bold"><span class="text-blue-400">${formatarNumeroPedido(p)}</span> · <i class="fas fa-user"></i> ${p.clienteNome || p.cliente}</p><p class="text-sm text-white/60"><i class="far fa-calendar-alt"></i> ${p.data} às ${p.hora}</p></div><div class="grid md:grid-cols-2 gap-3 text-sm"><div><p><i class="fab fa-whatsapp text-green-400"></i> ${p.whatsapp}</p><p><i class="fas fa-map-marker-alt text-blue-400"></i> ${p.endereco}, ${p.cidade || ""}</p><p><i class="fas fa-credit-card"></i> Pagamento: ${p.metodo}</p>${czkExtrasPedidoHTML(p)}</div><div><p class="font-semibold">Itens:</p><ul class="text-xs text-white/70 list-disc list-inside">${p.itens.map(i=>`<li>${i}</li>`).join('')}</ul><p class="font-bold text-blue-400 mt-2">Total: R$ ${p.total.toFixed(2)}</p><p class="text-xs ${p.status === 'Entrega finalizada' ? 'text-blue-400' : 'text-green-400'} mt-1">Status: ${p.status || "Em preparo"}</p><button onclick="enviarNotificacaoEntrega('${p.whatsapp}', '${p.clienteNome || p.cliente}')" class="btn-entrega text-white px-3 py-1 rounded-lg text-xs mt-2"><i class="fas fa-motorcycle"></i> Saindo para entrega</button> <button onclick="imprimirPedido(${p.id})" class="bg-blue-700 hover:bg-blue-600 px-3 py-1 rounded-lg text-xs mt-2"><i class="fas fa-print"></i> Imprimir</button></div></div></div>`).join(''); }
+        function renderHistorico() { let pedidosFiltrados = historicoPedidos; if(filtroDataUnica) { const [ano,mes,dia] = filtroDataUnica.split('-'); const dataStr = `${dia}/${mes}/${ano}`; pedidosFiltrados = pedidosFiltrados.filter(p => p.data === dataStr); } if(buscaHistoricoTexto) { const termo = buscaHistoricoTexto.trim().toLowerCase(); pedidosFiltrados = pedidosFiltrados.filter(p => { const numero = (formatarNumeroPedido(p) || "").toLowerCase(); const nome = (p.clienteNome || p.cliente || "").toLowerCase(); const whatsapp = (p.whatsapp || "").toLowerCase(); const endereco = `${p.endereco || ""} ${p.cidade || ""}`.toLowerCase(); const itens = (p.itens || []).join(" ").toLowerCase(); return numero.includes(termo) || nome.includes(termo) || whatsapp.includes(termo) || endereco.includes(termo) || itens.includes(termo); }); } const container = document.getElementById("historico-pedidos"); if(!container) return; if(pedidosFiltrados.length === 0) { container.innerHTML = "<p class='text-center text-white/50'>Nenhum pedido encontrado.</p>"; return; } container.innerHTML = pedidosFiltrados.map(p => `<div class="bg-black/40 p-4 rounded-xl border border-blue-800/50"><div class="flex justify-between flex-wrap gap-2 border-b border-white/15 pb-2 mb-2"><p class="text-white font-bold"><span class="text-blue-400">${formatarNumeroPedido(p)}</span> · <i class="fas fa-user"></i> ${p.clienteNome || p.cliente}</p><p class="text-sm text-white/60"><i class="far fa-calendar-alt"></i> ${p.data} às ${p.hora}</p></div><div class="grid md:grid-cols-2 gap-3 text-sm"><div><p><i class="fab fa-whatsapp text-green-400"></i> ${p.whatsapp}</p><p><i class="fas fa-map-marker-alt text-blue-400"></i> ${p.endereco}, ${p.cidade || ""}</p><p><i class="fas fa-credit-card"></i> Pagamento: ${p.metodo}</p>${czkExtrasPedidoHTML(p)}</div><div><p class="font-semibold">Itens:</p><ul class="text-xs text-white/70 list-disc list-inside">${p.itens.map(i=>`<li>${i}</li>`).join('')}</ul><p class="font-bold text-blue-400 mt-2">Total: R$ ${p.total.toFixed(2)}</p><p class="text-xs ${(p.status === 'Entrega finalizada' || p.status === 'Cliente retirou') ? 'text-blue-400' : 'text-green-400'} mt-1">Status: ${p.status || "Em preparo"}</p><button onclick="enviarNotificacaoEntrega('${p.whatsapp}', '${p.clienteNome || p.cliente}')" class="btn-entrega text-white px-3 py-1 rounded-lg text-xs mt-2"><i class="fas fa-motorcycle"></i> Saindo para entrega</button> <button onclick="imprimirPedido(${p.id})" class="bg-blue-700 hover:bg-blue-600 px-3 py-1 rounded-lg text-xs mt-2"><i class="fas fa-print"></i> Imprimir</button></div></div></div>`).join(''); }
         function enviarNotificacaoEntrega(whats, nome) { let numero = whats.replace(/\D/g,''); if(!numero.startsWith('55')) numero='55'+numero; const msg = `🍣 *${configEmpresa.nome}* 🍣\n\nOlá *${nome}*, seu pedido já saiu para entrega! 🛵\n⏱️ *Estimativa de chegada:* 15 a 30 minutos.\n\nAgradecemos pela preferência! ❤️`; const link = `https://wa.me/${numero}?text=${encodeURIComponent(msg)}`; const aba = window.open(link, '_blank'); if(!aba) window.location.href = link; }
         function filtrarPorDataUnica() { const data = document.getElementById("filtro-data-unica").value; if(!data) return czkAlert("Selecione uma data."); filtroDataUnica = data; renderHistorico(); }
         function limparFiltroDataUnica() { filtroDataUnica = null; document.getElementById("filtro-data-unica").value = ""; renderHistorico(); }
@@ -9727,17 +9794,26 @@ ${esgotado ? '' : '<div class="badge-destaque-3d"><span class="fire-icon fire-3d
                 const rect = wrapper.getBoundingClientRect();
                 offsetX = clientX - rect.left;
                 offsetY = clientY - rect.top;
-                wrapper.style.left = (rect.left - containerRect.left) + "px";
-                wrapper.style.top = (rect.top - containerRect.top) + "px";
-                wrapper.style.transform = "none";
-                wrapper.classList.add("arrastando");
+                // IMPORTANTE: não mexe em left/top/transform aqui. Isso só acontece dentro de
+                // moverPara, quando o arraste é de fato confirmado (passou do LIMIAR_ARRASTE).
+                // Antes, essa troca acontecia em todo clique (mesmo os que não viravam arraste),
+                // e isso fazia o biscoito perder o "left:50%+transform" que o mantém centralizado
+                // — daí a mensagem da sorte aparecer fora do lugar depois de um clique simples.
             };
 
             const moverPara = (clientX, clientY) => {
                 if(!biscoitoArrastando) return;
                 if(!biscoitoMoveuDeVerdade) {
                     const dist = Math.hypot(clientX - inicioX, clientY - inicioY);
-                    if(dist > LIMIAR_ARRASTE) biscoitoMoveuDeVerdade = true;
+                    if(dist <= LIMIAR_ARRASTE) return; // ainda é só um clique — não mexe em nada
+                    biscoitoMoveuDeVerdade = true;
+                    // Só agora que o arraste foi confirmado de verdade: troca a centralização
+                    // automática (left:50% + transform) por coordenadas fixas em pixel.
+                    const rect = wrapper.getBoundingClientRect();
+                    wrapper.style.left = (rect.left - containerRect.left) + "px";
+                    wrapper.style.top = (rect.top - containerRect.top) + "px";
+                    wrapper.style.transform = "none";
+                    wrapper.classList.add("arrastando");
                 }
                 let novoX = (clientX - containerRect.left) - offsetX;
                 let novoY = (clientY - containerRect.top) - offsetY;
@@ -10071,6 +10147,7 @@ ${esgotado ? '' : '<div class="badge-destaque-3d"><span class="fire-icon fire-3d
             czkSave("czk_pedidos", historicoPedidos);
             renderGarcomPainelMesas();
             renderBalcaoAdmin();
+            renderPedidosAtivos();
             if(garcomMesaPreview !== null) {
                 const container = document.getElementById("lista-pedidos-cliente");
                 if(container) renderResumoComandaMesaCliente(container, garcomMesaPreview);
@@ -10094,6 +10171,7 @@ ${esgotado ? '' : '<div class="badge-destaque-3d"><span class="fire-icon fire-3d
             czkSave("czk_pedidos", historicoPedidos);
             renderGarcomPainelMesas();
             renderBalcaoAdmin();
+            renderPedidosAtivos();
             if(garcomMesaPreview !== null) {
                 const container = document.getElementById("lista-pedidos-cliente");
                 if(container) renderResumoComandaMesaCliente(container, garcomMesaPreview);
@@ -12834,6 +12912,30 @@ ${esgotado ? '' : '<div class="badge-destaque-3d"><span class="fire-icon fire-3d
         function fecharModalAdmin() { document.getElementById("modal-proprietario").style.display = "none"; }
         function validarAdmin() { if(document.getElementById("senha-admin").value === "admin123") { document.getElementById("modal-proprietario").style.display = "none"; document.getElementById("admin-panel").style.display = "block"; adminLogado = true; devLogado = false; document.getElementById("btn-tab-dev").style.display = "none"; renderPedidosAtivos(); renderControleEntregas(); renderCancelamentosAdmin(); renderPedidosFinalizadosAdmin(); renderPedidosRetiradaAdmin(); renderBalcaoAdmin(); czkAtivarPush('admin', null); atualizarBolinhaSuporte(); atualizarBolinhaEntregador(); } else czkAlert("Senha incorreta!"); }
         function fecharAdmin() { document.getElementById("admin-panel").style.display = "none"; adminLogado = false; devLogado = false; document.getElementById("btn-tab-dev").style.display = "none"; atualizarBolinhaSuporte(); atualizarBolinhaEntregador(); }
+
+        // ===================== Tela cheia da aba Pedidos =====================
+        // Usa a Fullscreen API de verdade do navegador (não é só um "zoom" do painel):
+        // some com a barra de endereço/abas e o painel de pedidos ocupa o monitor inteiro,
+        // sobrando mais espaço vertical/horizontal pra ver mais pedidos de uma vez sem rolar.
+        // Ícone do botão muda sozinho (expandir/comprimir) em qualquer forma de sair da tela
+        // cheia — pelo botão, pela tecla Esc do navegador, etc — porque ouve o evento
+        // "fullscreenchange" em vez de só alternar um estado próprio.
+        function czkToggleTelaCheiaPedidos() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {
+                    czkAlert("Não foi possível ativar a tela cheia neste navegador.");
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        }
+        document.addEventListener('fullscreenchange', () => {
+            const icone = document.getElementById('icone-tela-cheia-pedidos');
+            if (!icone) return;
+            const emTelaCheia = !!document.fullscreenElement;
+            icone.classList.toggle('fa-expand', !emTelaCheia);
+            icone.classList.toggle('fa-compress', emTelaCheia);
+        });
         function abrirLoginEntregador() { if(!czkRecursoLiberado('modulo_entregador')) return czkAlertUpgradePlano(); document.getElementById("modal-entregador").style.display = "flex"; }
         function fecharModalEntregador() { document.getElementById("modal-entregador").style.display = "none"; }
         function validarEntregador() { const login = document.getElementById("login-entregador").value.trim(), senha = document.getElementById("senha-entregador").value.trim(); const encontrado = entregadores.find(e => e.login === login && e.senha === senha); if(encontrado) { entregadorLogado = login; document.getElementById("modal-entregador").style.display = "none"; document.getElementById("entregador-panel").style.display = "block"; renderPedidosDisponiveis(); renderMinhasEntregas(); renderRotasEntrega(); czkAtivarPush('entregador', login); iniciarRastreamentoLocalizacao(); } else czkAlert("Login ou senha incorretos!"); }
