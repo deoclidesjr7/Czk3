@@ -98,6 +98,30 @@
         .hero-bg { display: block; position: fixed; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; }
         .bg-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; background: #f3e8ca; }
 
+        /* "Bem vindo, Nome": no celular a barra de cima é curta, então em vez de cortar o nome
+           com "..." (como acontecia antes com uma linha só), a saudação fica em cima e o
+           primeiro nome embaixo, os dois legíveis. No computador (ver media query 992px
+           abaixo) volta a ficar tudo numa linha só, lado a lado. */
+        #cliente-nome-header {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            line-height: 1.15;
+            max-width: 110px;
+        }
+        #cliente-nome-header .cliente-nome-header-saudacao {
+            font-size: 9px;
+            opacity: 0.75;
+        }
+        #cliente-nome-header .cliente-nome-header-nome {
+            font-size: 12px;
+            font-weight: 600;
+            max-width: 110px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
         /* ===== Adaptador de telas: no celular ocupa a tela inteira; no computador vira um "app" centralizado ===== */
         /* Sem "contain: layout" aqui no mobile, pra elementos position:fixed (carrinho, modais) ficarem
            realmente fixos na tela do celular, e não "presos" dentro do #app-shell rolando junto com a página. */
@@ -128,12 +152,16 @@
                 width: 100%;
                 box-shadow: none;
             }
-            /* "Bem vindo, Nome Completo": no celular o espaço é curto e o nome é cortado com "..."
-               de propósito (classe .truncate + max-w-[92px] no HTML). No computador sobra espaço de
-               sobra na barra superior, então aqui a gente cancela esse corte e libera o nome inteiro.
-               Um seletor por #id já tem prioridade maior que as classes do Tailwind, então nem precisa
-               de !important pra vencer o .truncate/.max-w-[92px]. */
+            /* "Bem vindo, Nome": no celular o espaço da barra é curto, então o texto fica em duas
+               linhas (ver regra base de #cliente-nome-header logo abaixo). No computador sobra
+               espaço de sobra na barra superior, então aqui a gente volta pra uma linha só. */
             #cliente-nome-header {
+                flex-direction: row;
+                align-items: center;
+                gap: 4px;
+                max-width: none;
+            }
+            #cliente-nome-header .cliente-nome-header-nome {
                 max-width: none;
                 overflow: visible;
                 text-overflow: clip;
@@ -1116,35 +1144,35 @@
     </div>
 
     <!-- TELA DE CADASTRO DO CLIENTE -->
-    <div id="screen-auth" style="display: none;" class="fixed inset-0 z-50 flex items-center justify-center p-5">
-        <div class="glass-card rounded-3xl p-8 w-full max-w-md border border-blue-700/50 shadow-2xl">
-            <div class="text-center mb-7">
+    <div id="screen-auth" style="display: none;" class="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-5 overflow-y-auto">
+        <div class="glass-card rounded-2xl sm:rounded-3xl p-5 sm:p-8 w-full max-w-md border border-blue-700/50 shadow-2xl my-6 sm:my-10">
+            <div class="text-center mb-4 sm:mb-7">
                 <div id="logo-auth-container"></div>
                 <p id="subtitulo-auth" class="text-[10px] text-white/60 uppercase tracking-[0.25em] mt-2"></p>
             </div>
-            <form id="form-cliente" class="space-y-5" onsubmit="salvarCadastro(event)">
-                <div><label class="text-[11px] text-white/60 uppercase">Nome Completo</label><input type="text" id="cliente-nome" required class="w-full rounded-xl p-3 text-sm"></div>
+            <form id="form-cliente" class="space-y-3 sm:space-y-5" onsubmit="salvarCadastro(event)">
+                <div><label class="text-[11px] text-white/60 uppercase">Nome Completo</label><input type="text" id="cliente-nome" required class="w-full rounded-xl p-2.5 sm:p-3 text-sm"></div>
                 <div>
                     <label class="text-[11px] text-white/60 uppercase">WhatsApp (com DDD)</label>
-                    <input type="tel" id="cliente-whats" required placeholder="(47) 99640-6776" class="w-full rounded-xl p-3 text-sm" maxlength="16" oninput="formatarWhatsApp(this)">
+                    <input type="tel" id="cliente-whats" required placeholder="(47) 99640-6776" class="w-full rounded-xl p-2.5 sm:p-3 text-sm" maxlength="16" oninput="formatarWhatsApp(this)">
                     <p class="text-[9px] text-white/40 mt-1">Formato: (DD) 9XXXX-XXXX</p>
                 </div>
                 <div class="input-com-autocomplete">
                     <label class="text-[11px] text-white/60 uppercase">Rua / Endereço</label>
-                    <input type="text" id="cliente-rua" required placeholder="Digite o endereço..." class="w-full rounded-xl p-3 text-sm">
+                    <input type="text" id="cliente-rua" required placeholder="Digite o endereço..." class="w-full rounded-xl p-2.5 sm:p-3 text-sm">
                     <div id="sugestoes-endereco" class="sugestao-endereco hidden"></div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
-                    <div><label class="text-[11px] text-white/60 uppercase">Número</label><input type="text" id="cliente-numero" placeholder="Nº" class="w-full rounded-xl p-3 text-sm"></div>
-                    <div><label class="text-[11px] text-white/60 uppercase">Cidade</label><select id="cliente-cidade" required class="w-full rounded-xl p-3 text-sm" onchange="atualizarBairros()"><option value="" disabled selected>Selecione a cidade</option></select></div>
+                    <div><label class="text-[11px] text-white/60 uppercase">Número</label><input type="text" id="cliente-numero" placeholder="Nº" class="w-full rounded-xl p-2.5 sm:p-3 text-sm"></div>
+                    <div><label class="text-[11px] text-white/60 uppercase">Cidade</label><select id="cliente-cidade" required class="w-full rounded-xl p-2.5 sm:p-3 text-sm" onchange="atualizarBairros()"><option value="" disabled selected>Selecione a cidade</option></select></div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
-                    <div><label class="text-[11px] text-white/60 uppercase">Bairro</label><select id="cliente-bairro" required class="w-full rounded-xl p-3 text-sm"><option value="" disabled selected>Selecione o bairro</option></select></div>
-                    <div><label class="text-[11px] text-white/60 uppercase">Complemento</label><input type="text" id="cliente-complemento" placeholder="Apto, Bloco..." class="w-full rounded-xl p-3 text-sm"></div>
+                    <div><label class="text-[11px] text-white/60 uppercase">Bairro</label><select id="cliente-bairro" required class="w-full rounded-xl p-2.5 sm:p-3 text-sm"><option value="" disabled selected>Selecione o bairro</option></select></div>
+                    <div><label class="text-[11px] text-white/60 uppercase">Complemento</label><input type="text" id="cliente-complemento" placeholder="Apto, Bloco..." class="w-full rounded-xl p-2.5 sm:p-3 text-sm"></div>
                 </div>
-                <div><label class="text-[11px] text-white/60 uppercase">Login (para acesso) / E-mail</label><input type="email" id="cliente-login" required placeholder="Digite seu e-mail" class="w-full rounded-xl p-3 text-sm"></div>
-                <div><label class="text-[11px] text-white/60 uppercase">Senha</label><input type="password" id="cliente-senha" required class="w-full rounded-xl p-3 text-sm"></div>
-                <button type="submit" class="w-full btn-red-czk text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2"><i class="fas fa-utensils"></i> INICIAR EXPERIÊNCIA <i class="fas fa-arrow-right"></i></button>
+                <div><label class="text-[11px] text-white/60 uppercase">Login (para acesso) / E-mail</label><input type="email" id="cliente-login" required placeholder="Digite seu e-mail" class="w-full rounded-xl p-2.5 sm:p-3 text-sm"></div>
+                <div><label class="text-[11px] text-white/60 uppercase">Senha</label><input type="password" id="cliente-senha" required class="w-full rounded-xl p-2.5 sm:p-3 text-sm"></div>
+                <button type="submit" class="w-full btn-red-czk text-white font-bold py-2.5 sm:py-3.5 rounded-xl flex items-center justify-center gap-2"><i class="fas fa-utensils"></i> INICIAR EXPERIÊNCIA <i class="fas fa-arrow-right"></i></button>
             </form>
             <button onclick="voltarLogin()" class="w-full mt-5 text-[11px] text-white/40 hover:text-blue-400/70 text-center flex items-center justify-center gap-2"><i class="fas fa-arrow-left"></i> Voltar ao login</button>
         </div>
@@ -2695,7 +2723,7 @@
                     <span id="status-cardapio-badge" class="badge-cardapio-aberto inline-flex items-center gap-1.5 text-[10px] font-extrabold tracking-widest px-3 py-1.5 rounded-full border shrink-0"><i class="fas fa-circle text-[7px]"></i> <span id="status-cardapio-badge-texto">ABERTO</span></span>
                 </div>
                 <div class="flex items-center gap-2.5">
-                    <span class="text-white/60 text-xs max-w-[92px] truncate whitespace-nowrap" id="cliente-nome-header"></span>
+                    <div class="text-white/60 text-xs" id="cliente-nome-header"></div>
                     <div class="relative" id="menu-cliente-wrapper">
                         <i class="far fa-circle-user text-white/60 text-xl user-icon cursor-pointer" onclick="toggleMenuCliente(event)"></i>
                         <div id="menu-cliente-dropdown" class="hidden absolute right-0 top-full mt-2 w-52 glass-card-solid rounded-xl border border-blue-800/40 shadow-2xl overflow-hidden z-50">
@@ -4125,7 +4153,7 @@
             document.getElementById("screen-login").style.display = "none";
             document.getElementById("screen-auth").style.display = "none";
             document.getElementById("app-cliente").style.display = "block";
-            document.getElementById("cliente-nome-header").innerText = "Bem vindo, " + clienteAtual.nome;
+            czkAtualizarSaudacaoHeader(clienteAtual.nome);
             atualizarSelectEnderecos();
             czkAtivarPush('cliente', clienteAtual.whats);
             iniciarBiscoitoCliente();
@@ -4162,6 +4190,24 @@
             document.getElementById("screen-login").style.display = "flex";
             document.getElementById("form-cliente").reset();
             atualizarBairros();
+        }
+
+        // "Bem vindo," em cima e o primeiro nome do cliente embaixo (ver CSS de
+        // #cliente-nome-header). Monta via createElement/textContent (não innerHTML)
+        // pra não correr risco nenhum com nomes contendo caracteres especiais.
+        function czkAtualizarSaudacaoHeader(nomeCompleto) {
+            const el = document.getElementById("cliente-nome-header");
+            if (!el) return;
+            const primeiroNome = (nomeCompleto || "").trim().split(" ")[0];
+            el.innerHTML = "";
+            const linha1 = document.createElement("span");
+            linha1.className = "cliente-nome-header-saudacao";
+            linha1.textContent = "Bem vindo,";
+            const linha2 = document.createElement("span");
+            linha2.className = "cliente-nome-header-nome";
+            linha2.textContent = primeiroNome;
+            el.appendChild(linha1);
+            el.appendChild(linha2);
         }
 
         // =========================================================================
@@ -4442,7 +4488,7 @@
 
             document.getElementById("screen-auth").style.display = "none";
             document.getElementById("app-cliente").style.display = "block";
-            document.getElementById("cliente-nome-header").innerText = "Bem vindo, " + clienteAtual.nome;
+            czkAtualizarSaudacaoHeader(clienteAtual.nome);
             document.getElementById("form-cliente").reset();
             atualizarBairros();
             atualizarSelectEnderecos();
@@ -11383,7 +11429,7 @@ ${esgotado ? '' : '<div class="badge-destaque-3d"><span class="fire-icon fire-3d
                 clienteAtual.senha = novaSenha;
             }
 
-            document.getElementById("cliente-nome-header").innerText = "Bem vindo, " + clienteAtual.nome;
+            czkAtualizarSaudacaoHeader(clienteAtual.nome);
 
             fecharConfigConta();
             czkAlert("Configurações atualizadas com sucesso!");
