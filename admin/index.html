@@ -3491,7 +3491,7 @@
         // Quando um dado muda em outro dispositivo, atualiza a variável local certa e re-renderiza
         function czkAplicarDadosRecebidos(key, value) {
             switch(key) {
-                case 'czk_produtos': produtos = value; renderCardapio("promocao"); renderCarrosselAnimado(); renderAdminProdutos(); if (document.getElementById("estoque-admin")?.classList.contains("active")) renderEstoqueReceitasAdmin(); break;
+                case 'czk_produtos': if (value) { produtos = value; renderCardapio("promocao"); renderCarrosselAnimado(); renderAdminProdutos(); } break; if (document.getElementById("estoque-admin")?.classList.contains("active")) renderEstoqueReceitasAdmin(); break;
                 case 'czk_ingredientes': ingredientes = value || []; atualizarBadgeEstoqueBaixo(); if (document.getElementById("estoque-admin")?.classList.contains("active")) { renderEstoqueProdutosAdmin(); renderEstoqueReceitasAdmin(); } break;
                 case 'czk_pedidos': {
                     const idsAntigos = new Set(historicoPedidos.map(p => p.id));
