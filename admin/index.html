@@ -1,13 +1,3 @@
-<!-- 
-  ====================================
-  CZK MAKI - VERSÃO ADMINISTRADOR
-  ====================================
-  Arquivo para equipe (Admin, Cozinha, Garçom, Entregador)
-  URL: czkmaki.com.br/admin
-  Gerado em: 31/07/2026
-  Removidos: 14 blocos de cliente
-  ==================================== 
--->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -1106,6 +1096,29 @@
     <div class="bg-overlay" id="dynamic-overlay"></div>
 
     <!-- TELA DE LOGIN -->
+    <div id="screen-login" class="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 p-5">
+        <div class="glass-card rounded-2xl sm:rounded-3xl p-5 sm:p-8 w-full max-w-[300px] sm:max-w-md border border-blue-700/50 shadow-2xl">
+            <div class="text-center mb-4 sm:mb-7">
+                <div id="logo-login-container"></div>
+                <p id="subtitulo-login" class="text-[10px] text-white/60 uppercase tracking-[0.25em] mt-2"></p>
+            </div>
+            <form id="form-login" class="space-y-3 sm:space-y-5" onsubmit="validarLogin(event)">
+                <div><label class="text-[11px] text-white/60 uppercase">Login / E-mail</label><input type="text" id="login-usuario" required placeholder="Digite seu e-mail" class="w-full rounded-xl p-2.5 sm:p-3 text-sm"></div>
+                <div><label class="text-[11px] text-white/60 uppercase">Senha</label><input type="password" id="login-senha" required class="w-full rounded-xl p-2.5 sm:p-3 text-sm"></div>
+                <button type="submit" class="w-full btn-red-czk text-white font-bold py-2.5 sm:py-3.5 rounded-xl flex items-center justify-center gap-2"><i class="fas fa-sign-in-alt"></i> ENTRAR</button>
+            </form>
+            <button onclick="pularLogin()" class="w-full mt-3 sm:mt-5 btn-cadastro-destaque text-white font-bold py-2.5 sm:py-3.5 rounded-xl flex items-center justify-center gap-3">
+                <i class="fas fa-user-plus text-lg"></i> 
+                FAZER 1° CADASTRO
+                <i class="fas fa-arrow-right text-lg"></i>
+            </button>
+            <button onclick="abrirLoginProprietario()" class="w-full mt-2 sm:mt-3 text-[11px] text-white/40 hover:text-blue-400/70 text-center flex items-center justify-center gap-2"><i class="fas fa-lock"></i> Acesso Privado</button>
+        </div>
+        <div id="status-funcionamento-bar" class="text-center bg-black/45 backdrop-blur-sm px-7 py-2.5 rounded-2xl border border-white/10">
+            <p style="color:rgba(255,255,255,0.75);" class="text-[10px] uppercase tracking-[0.25em] font-bold">Funcionamento</p>
+            <p id="status-funcionamento-texto" class="status-aberto status-pulse text-xs font-extrabold tracking-[0.25em] mt-1">ABERTO</p>
+        </div>
+    </div>
 
     <!-- NOTIFICAÇÃO PROMOCIONAL (aparece por cima da tela de login ao abrir o app) -->
     <div id="modal-notificacao-promo" class="fixed inset-0 hidden items-center justify-center p-5" style="z-index:80;">
@@ -1133,6 +1146,39 @@
     </div>
 
     <!-- TELA DE CADASTRO DO CLIENTE -->
+    <div id="screen-auth" style="display: none;" class="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-5 overflow-y-auto">
+        <div class="glass-card rounded-2xl sm:rounded-3xl p-5 sm:p-8 w-full max-w-md border border-blue-700/50 shadow-2xl my-6 sm:my-10">
+            <div class="text-center mb-4 sm:mb-7">
+                <div id="logo-auth-container"></div>
+                <p id="subtitulo-auth" class="text-[10px] text-white/60 uppercase tracking-[0.25em] mt-2"></p>
+            </div>
+            <form id="form-cliente" class="space-y-3 sm:space-y-5" onsubmit="salvarCadastro(event)">
+                <div><label class="text-[11px] text-white/60 uppercase">Nome Completo</label><input type="text" id="cliente-nome" required class="w-full rounded-xl p-2.5 sm:p-3 text-sm"></div>
+                <div>
+                    <label class="text-[11px] text-white/60 uppercase">WhatsApp (com DDD)</label>
+                    <input type="tel" id="cliente-whats" required placeholder="(47) 99640-6776" class="w-full rounded-xl p-2.5 sm:p-3 text-sm" maxlength="16" oninput="formatarWhatsApp(this)">
+                    <p class="text-[9px] text-white/40 mt-1">Formato: (DD) 9XXXX-XXXX</p>
+                </div>
+                <div class="input-com-autocomplete">
+                    <label class="text-[11px] text-white/60 uppercase">Rua / Endereço</label>
+                    <input type="text" id="cliente-rua" required placeholder="Digite o endereço..." class="w-full rounded-xl p-2.5 sm:p-3 text-sm">
+                    <div id="sugestoes-endereco" class="sugestao-endereco hidden"></div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div><label class="text-[11px] text-white/60 uppercase">Número</label><input type="text" id="cliente-numero" placeholder="Nº" class="w-full rounded-xl p-2.5 sm:p-3 text-sm"></div>
+                    <div><label class="text-[11px] text-white/60 uppercase">Cidade</label><select id="cliente-cidade" required class="w-full rounded-xl p-2.5 sm:p-3 text-sm" onchange="atualizarBairros()"><option value="" disabled selected>Selecione a cidade</option></select></div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div><label class="text-[11px] text-white/60 uppercase">Bairro</label><select id="cliente-bairro" required class="w-full rounded-xl p-2.5 sm:p-3 text-sm"><option value="" disabled selected>Selecione o bairro</option></select></div>
+                    <div><label class="text-[11px] text-white/60 uppercase">Complemento</label><input type="text" id="cliente-complemento" placeholder="Apto, Bloco..." class="w-full rounded-xl p-2.5 sm:p-3 text-sm"></div>
+                </div>
+                <div><label class="text-[11px] text-white/60 uppercase">Login (para acesso) / E-mail</label><input type="email" id="cliente-login" required placeholder="Digite seu e-mail" class="w-full rounded-xl p-2.5 sm:p-3 text-sm"></div>
+                <div><label class="text-[11px] text-white/60 uppercase">Senha</label><input type="password" id="cliente-senha" required class="w-full rounded-xl p-2.5 sm:p-3 text-sm"></div>
+                <button type="submit" class="w-full btn-red-czk text-white font-bold py-2.5 sm:py-3.5 rounded-xl flex items-center justify-center gap-2"><i class="fas fa-utensils"></i> INICIAR EXPERIÊNCIA <i class="fas fa-arrow-right"></i></button>
+            </form>
+            <button onclick="voltarLogin()" class="w-full mt-5 text-[11px] text-white/40 hover:text-blue-400/70 text-center flex items-center justify-center gap-2"><i class="fas fa-arrow-left"></i> Voltar ao login</button>
+        </div>
+    </div>
 
     <!-- MODAL LOGIN ADMIN -->
     <div id="modal-proprietario" class="fixed inset-0 z-50 bg-[#13223a]/98 hidden items-center justify-center p-4 backdrop-blur-md">
@@ -2474,6 +2520,36 @@
     </div>
 
     <!-- MODAL DE DETALHE DO PRODUTO (TIPO / RECHEIO / ACOMPANHA) -->
+    <div id="modal-detalhe-produto" class="fixed inset-0 z-50 bg-[#0a0a0a]/90 hidden items-end md:items-center justify-center p-4 backdrop-blur-md">
+        <div class="glass-card rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl max-h-[90vh] flex flex-col">
+            <div class="relative">
+                <img id="detalhe-img" src="" class="w-full h-56 object-cover">
+                <button onclick="fecharModalDetalheProduto()" class="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 text-[#16233d] text-xl flex items-center justify-center shadow">&times;</button>
+            </div>
+            <div class="p-5 overflow-y-auto flex-1 space-y-5">
+                <div>
+                    <h2 id="detalhe-nome" class="text-2xl font-extrabold"></h2>
+                    <p id="detalhe-desc" class="text-sm mt-1 opacity-70"></p>
+                </div>
+                <div id="detalhe-tipos-wrapper" class="hidden space-y-2">
+                    <p class="opcao-label-secao">Tipo</p>
+                    <div id="detalhe-tipos-container" class="grid gap-2"></div>
+                </div>
+                <div id="detalhe-recheios-multi-wrapper" class="hidden space-y-4"></div>
+                <div id="detalhe-acompanha-wrapper" class="hidden space-y-2">
+                    <p class="opcao-label-secao">Acompanha</p>
+                    <div id="detalhe-acompanha-container" class="flex flex-wrap gap-x-4 gap-y-2"></div>
+                </div>
+            </div>
+            <div class="p-5 border-t border-black/10 flex items-center justify-between gap-4">
+                <div>
+                    <p class="opcao-label-secao">Valor</p>
+                    <p id="detalhe-valor-texto" class="text-2xl font-extrabold"></p>
+                </div>
+                <button id="detalhe-btn-adicionar" onclick="adicionarItemPersonalizado()" class="btn-red-czk text-white font-bold py-3 px-6 rounded-xl flex items-center gap-2"><i class="fas fa-plus"></i> Adicionar</button>
+            </div>
+        </div>
+    </div>
 
     <!-- MODAL HISTÓRICO DO CLIENTE (COM BARRA DE PROGRESSO) -->
     <!-- MODAL: RELATÓRIO FINANCEIRO (tela cheia) -->
@@ -2519,8 +2595,41 @@
     </div>
 
     <!-- MODAL: LISTA DE CONVERSAS DE SUPORTE DO CLIENTE -->
+    <div id="modal-suporte-cliente" class="fixed inset-0 z-50 bg-[#13223a]/98 hidden items-center justify-center p-4 backdrop-blur-md">
+        <div class="glass-card rounded-2xl w-full max-w-md border border-blue-700/60 overflow-hidden shadow-2xl flex flex-col" style="height:min(640px,85vh);">
+            <div class="bg-blue-900/20 p-5 flex justify-between items-center border-b border-blue-800/50">
+                <h2 class="text-2xl font-bold flex items-center gap-2"><i class="fas fa-headset text-blue-500"></i> Suporte</h2>
+                <button onclick="fecharModalSuporteCliente()" class="text-3xl text-white/50 hover:text-blue-400">&times;</button>
+            </div>
+            <div class="p-5 pb-0 space-y-3">
+                <button onclick="abrirChatComAdmin()" class="w-full bg-blue-50 hover:bg-blue-100 text-blue-800 text-sm font-bold px-4 py-3 rounded-xl flex items-center justify-center gap-2 border border-blue-300"><i class="fas fa-comment-dots text-blue-600"></i> Falar com o suporte</button>
+                <div class="grid grid-cols-2 gap-3">
+                    <button id="subaba-suporte-historico-btn" onclick="abrirSubabaSuporteCliente('historico')" class="subaba-suporte-cliente-btn text-sm font-semibold px-3 py-2.5 rounded-xl flex items-center justify-center gap-2 border"><i class="fas fa-clock-rotate-left"></i> Histórico de chat</button>
+                    <button id="subaba-suporte-cancelados-btn" onclick="abrirSubabaSuporteCliente('cancelados')" class="subaba-suporte-cliente-btn text-sm font-semibold px-3 py-2.5 rounded-xl flex items-center justify-center gap-2 border"><i class="fas fa-ban"></i> Pedidos cancelados</button>
+                </div>
+            </div>
+            <div id="lista-suporte-cliente" class="p-5 overflow-y-auto flex-1 space-y-3"></div>
+        </div>
+    </div>
 
     <!-- MODAL: CHAT DE SUPORTE (usado por cliente e admin, por pedido) -->
+    <div id="modal-chat-suporte" class="fixed inset-0 z-50 bg-[#13223a]/98 hidden items-center justify-center p-4 backdrop-blur-md">
+        <div class="glass-card rounded-2xl w-full max-w-md border border-blue-700/60 overflow-hidden shadow-2xl flex flex-col" style="height:min(640px,85vh);">
+            <div class="bg-blue-900/20 p-5 flex justify-between items-center border-b border-blue-800/50">
+                <h2 class="text-xl font-bold flex items-center gap-2"><i class="fas fa-comments text-blue-500"></i> <span id="chat-suporte-titulo">Suporte</span></h2>
+                <button onclick="fecharChatSuporte()" class="text-3xl text-white/50 hover:text-blue-400">&times;</button>
+            </div>
+            <div id="chat-suporte-mensagens" class="p-4 overflow-y-auto flex-1 flex flex-col gap-2 bg-black/20"></div>
+            <div class="p-4 border-t border-white/15 flex gap-2">
+                <input type="file" id="chat-suporte-camera-input" accept="image/*" capture="environment" class="hidden" onchange="czkAnexarFotoChat(this, enviarFotoSuporte)">
+                <input type="file" id="chat-suporte-foto-input" accept="image/*" class="hidden" onchange="czkAnexarFotoChat(this, enviarFotoSuporte)">
+                <button onclick="document.getElementById('chat-suporte-camera-input').click()" class="bg-black/10 hover:bg-black/20 text-blue-800 px-3 rounded-xl" title="Tirar foto"><i class="fas fa-camera"></i></button>
+                <button onclick="document.getElementById('chat-suporte-foto-input').click()" class="bg-black/10 hover:bg-black/20 text-blue-800 px-3 rounded-xl" title="Escolher da galeria"><i class="fas fa-image"></i></button>
+                <input type="text" id="chat-suporte-input" placeholder="Digite uma mensagem..." class="flex-1 rounded-xl p-3 text-sm" style="background:#fffdf6;color:#16233d;color-scheme:light;" onkeydown="if(event.key==='Enter') enviarMensagemSuporte()">
+                <button onclick="enviarMensagemSuporte()" class="bg-blue-700 hover:bg-blue-600 text-white px-4 rounded-xl"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
 
     <!-- BOLINHA FLUTUANTE: aviso de conversas de suporte não lidas (visível em qualquer tela do admin) -->
     <div id="suporte-float-bubble" class="hidden" onclick="cliqueBolinhaSuporte(event)">
@@ -2537,16 +2646,234 @@
     </div>
 
     <!-- MODAL MAPA DO ENDEREÇO DE ENTREGA (Google Maps) -->
+    <div id="modal-mapa-entrega" class="fixed inset-0 z-50 bg-[#13223a]/98 hidden items-end md:items-center justify-center p-4 backdrop-blur-md">
+        <div class="glass-card rounded-2xl w-full max-w-2xl border border-blue-700/60 overflow-hidden shadow-2xl">
+            <div class="bg-blue-900/20 p-5 flex justify-between items-center border-b border-blue-800/50">
+                <h2 class="text-xl font-bold flex items-center gap-2"><i class="fas fa-map-marker-alt text-blue-500"></i> Endereço de entrega</h2>
+                <button onclick="czkFecharMapaEntrega()" class="text-3xl text-white/50 hover:text-blue-400">&times;</button>
+            </div>
+            <iframe id="mapa-entrega-iframe" class="w-full border-0" style="height: 360px;" title="Mapa do endereço de entrega"></iframe>
+        </div>
+    </div>
 
     <!-- MODAL PARA ALTERAR LOGIN E SENHA DO CLIENTE (COM OLHO) -->
+    <div id="modal-config-conta" class="fixed inset-0 z-50 bg-[#13223a]/98 hidden items-center justify-center p-4 backdrop-blur-md">
+        <div class="glass-card rounded-2xl w-full max-w-md border border-blue-700/60 overflow-hidden shadow-2xl">
+            <div class="bg-blue-900/20 p-5 flex justify-between items-center border-b border-blue-800/50">
+                <h2 class="text-2xl font-bold flex items-center gap-2"><i class="fas fa-user-cog text-blue-500"></i> Configurações da Conta</h2>
+                <button onclick="fecharConfigConta()" class="text-3xl text-white/50 hover:text-blue-400">&times;</button>
+            </div>
+            <div class="p-5 space-y-4">
+                <div><label class="text-[11px] text-white/60 uppercase">Novo Login</label><input type="text" id="config-novo-login" class="w-full rounded-xl p-3 text-sm"></div>
+                <div>
+                    <label class="text-[11px] text-white/60 uppercase">Nova Senha</label>
+                    <div class="password-toggle relative">
+                        <input type="password" id="config-nova-senha" class="w-full rounded-xl p-3 text-sm">
+                        <button type="button" class="toggle-btn" onclick="togglePassword('config-nova-senha', this)"><i class="fas fa-eye"></i></button>
+                    </div>
+                </div>
+                <div>
+                    <label class="text-[11px] text-white/60 uppercase">Confirmar Senha</label>
+                    <div class="password-toggle relative">
+                        <input type="password" id="config-confirmar-senha" class="w-full rounded-xl p-3 text-sm">
+                        <button type="button" class="toggle-btn" onclick="togglePassword('config-confirmar-senha', this)"><i class="fas fa-eye"></i></button>
+                    </div>
+                </div>
+                <button onclick="salvarConfigConta()" class="w-full btn-red-czk py-3 rounded-xl font-bold flex items-center justify-center gap-2"><i class="fas fa-save"></i> Salvar Alterações</button>
+            </div>
+        </div>
+    </div>
 
     <!-- MODAL PARA GERENCIAR ENDEREÇOS DO CLIENTE -->
+    <div id="modal-enderecos" class="fixed inset-0 z-50 bg-[#13223a]/98 hidden items-end md:items-center justify-center p-4 backdrop-blur-md">
+        <div class="glass-card rounded-2xl w-full max-w-lg border border-blue-700/60 overflow-hidden shadow-2xl max-h-[85vh] flex flex-col">
+            <div class="bg-blue-900/20 p-5 flex justify-between items-center border-b border-blue-800/50">
+                <h2 class="text-2xl font-bold flex items-center gap-2"><i class="fas fa-home text-blue-500"></i> Meus Endereços</h2>
+                <button onclick="fecharModalEnderecos()" class="text-3xl text-white/50 hover:text-blue-400">&times;</button>
+            </div>
+            <div class="p-5 overflow-y-auto flex-1 space-y-4" id="lista-enderecos-container">
+                <!-- Endereços serão listados aqui -->
+            </div>
+            <div class="p-5 border-t border-white/15">
+                <button onclick="abrirModalNovoEndereco()" class="w-full bg-emerald-700 hover:bg-emerald-600 py-2 rounded-xl font-bold flex items-center justify-center gap-2"><i class="fas fa-plus"></i> Adicionar Novo Endereço</button>
+            </div>
+        </div>
+    </div>
 
     <!-- MODAL PARA ADICIONAR/EDITAR ENDEREÇO -->
+    <div id="modal-novo-endereco" class="fixed inset-0 z-50 bg-[#13223a]/98 hidden items-center justify-center p-4 backdrop-blur-md">
+        <div class="glass-card rounded-2xl w-full max-w-md border border-blue-700/60 overflow-hidden shadow-2xl">
+            <div class="bg-blue-900/20 p-5 flex justify-between items-center border-b border-blue-800/50">
+                <h2 class="text-2xl font-bold flex items-center gap-2"><i class="fas fa-edit text-blue-500"></i> <span id="endereco-modal-title">Novo Endereço</span></h2>
+                <button onclick="fecharModalNovoEndereco()" class="text-3xl text-white/50 hover:text-blue-400">&times;</button>
+            </div>
+            <div class="p-5 space-y-3">
+                <input type="hidden" id="endereco-edit-id" value="">
+                <div><label class="text-[11px] text-white/60 uppercase">Apelido (ex: Casa, Trabalho)</label><input type="text" id="endereco-apelido" placeholder="Casa" class="w-full rounded-xl p-3 text-sm"></div>
+                <div class="input-com-autocomplete">
+                    <label class="text-[11px] text-white/60 uppercase">Rua</label>
+                    <input type="text" id="endereco-rua" required placeholder="Digite o endereço..." class="w-full rounded-xl p-3 text-sm">
+                    <div id="sugestoes-endereco-modal" class="sugestao-endereco hidden"></div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div><label class="text-[11px] text-white/60 uppercase">Número</label><input type="text" id="endereco-numero" placeholder="Nº" class="w-full rounded-xl p-3 text-sm"></div>
+                    <div><label class="text-[11px] text-white/60 uppercase">Cidade</label><select id="endereco-cidade" class="w-full rounded-xl p-3 text-sm" onchange="atualizarBairrosEndereco()"><option value="" disabled selected>Selecione</option></select></div>
+                </div>
+                <div><label class="text-[11px] text-white/60 uppercase">Bairro</label><select id="endereco-bairro" class="w-full rounded-xl p-3 text-sm"><option value="" disabled selected>Selecione o bairro</option></select></div>
+                <div><label class="text-[11px] text-white/60 uppercase">Complemento</label><input type="text" id="endereco-complemento" placeholder="Apto, Bloco..." class="w-full rounded-xl p-3 text-sm"></div>
+                <div class="flex items-center gap-3">
+                    <input type="checkbox" id="endereco-principal" class="w-5 h-5 accent-blue-500">
+                    <label for="endereco-principal" class="text-sm text-white/80">Definir como endereço principal</label>
+                </div>
+                <button onclick="salvarEndereco()" class="w-full btn-red-czk py-3 rounded-xl font-bold flex items-center justify-center gap-2"><i class="fas fa-save"></i> Salvar Endereço</button>
+            </div>
+        </div>
+    </div>
 
     <!-- APP PRINCIPAL DO CLIENTE -->
+    <div id="app-cliente" style="display: none;" class="pb-32">
+        <header class="sticky top-0 z-20 glass-card border-b border-blue-800/40 backdrop-blur-xl relative">
+            <div id="logo-mesa-call-wrapper" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-2 z-10 pointer-events-none">
+                <div id="logo-container" class="flex items-center justify-center shrink-0"></div>
+                <button id="btn-chamar-garcom-mesa" onclick="chamarGarcom()" class="hidden pointer-events-auto bg-red-600 hover:bg-red-500 text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 whitespace-nowrap"><i class="fas fa-bell"></i> <span id="btn-chamar-garcom-texto">Chamar garçom</span></button>
+            </div>
+            <div id="header-cliente-linha-voltar" class="flex items-center gap-1.5 px-5 pt-0.5 pb-0.5 cursor-pointer w-fit voltar-mesa-discreto" onclick="modoGarcomAtivo ? voltarParaPainelGarcom() : (modoMesaAtivo ? abrirModalPinSairMesa() : voltarTelaInicial())">
+                <i class="fas fa-arrow-left text-white/60 text-xs"></i>
+                <span id="texto-voltar-header-cliente" class="text-white/60 text-[10px] font-bold uppercase tracking-wide">Voltar</span>
+            </div>
+            <div id="header-cliente-linha-logo" class="px-5 pb-1 pt-0.5 flex items-center justify-between min-h-[34px]">
+                <div class="flex items-center">
+                    <span id="status-cardapio-badge" class="badge-cardapio-aberto inline-flex items-center gap-1.5 text-[10px] font-extrabold tracking-widest px-3 py-1.5 rounded-full border shrink-0"><i class="fas fa-circle text-[7px]"></i> <span id="status-cardapio-badge-texto">ABERTO</span></span>
+                </div>
+                <div class="flex items-center gap-2.5">
+                    <div class="text-white/60 text-xs" id="cliente-nome-header"></div>
+                    <div class="relative" id="menu-cliente-wrapper">
+                        <i class="far fa-circle-user text-white/60 text-xl user-icon cursor-pointer" onclick="toggleMenuCliente(event)"></i>
+                        <div id="menu-cliente-dropdown" class="hidden absolute right-0 top-full mt-2 w-52 glass-card-solid rounded-xl border border-blue-800/40 shadow-2xl overflow-hidden z-50">
+                            <button onclick="abrirModalEnderecos(); fecharMenuCliente()" class="czk-dropdown-item w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-left" style="color:#16233d;"><i class="fas fa-map-marker-alt text-blue-400 w-4"></i> Meus Endereços</button>
+                            <button onclick="abrirConfigConta(); fecharMenuCliente()" class="czk-dropdown-item w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-left border-t border-black/10" style="color:#16233d;"><i class="fas fa-cog text-blue-400 w-4"></i> Configurações</button>
+                            <button onclick="abrirHistoricoCliente(); fecharMenuCliente()" class="czk-dropdown-item w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-left border-t border-black/10" style="color:#16233d;"><i class="fas fa-history text-blue-400 w-4"></i> Meus Pedidos</button>
+                            <button onclick="abrirModalSuporteCliente(); fecharMenuCliente()" class="czk-dropdown-item w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-left border-t border-black/10" style="color:#16233d;"><i class="fas fa-headset text-blue-400 w-4"></i> Suporte</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <!-- BISCOITO DA SORTE JAPONÊS -->
+        <div id="biscoito-widget-wrapper" class="hidden">
+            <div id="biscoito-caixa">
+                <div id="biscoito-conteudo-fechado">
+                    <span id="biscoito-close-x-fechado" class="biscoito-close-x" onclick="fecharBiscoitoWidget()">&times;</span>
+                    <div id="biscoito-emoji-container" style="position:relative; display:inline-block;">
+                    <img id="biscoito-emoji" onclick="abrirBiscoito()" draggable="false" alt="Biscoito da sorte" src="" style="width:64px;height:64px;">
+                        <img id="biscoito-emoji-esq" class="biscoito-metade biscoito-metade-esq hidden" draggable="false" alt="">
+                        <img id="biscoito-emoji-dir" class="biscoito-metade biscoito-metade-dir hidden" draggable="false" alt="">
+                    </div>
+                    <div id="biscoito-legenda-caixa" class="biscoito-legenda-caixa"><p class="biscoito-frase-legenda">clique no biscoito e veja a sua sorte</p></div>
+                </div>
+                <div id="biscoito-conteudo-aberto" class="hidden">
+                    <span id="biscoito-close-x-aberto" class="biscoito-close-x hidden" onclick="fecharBiscoitoWidget()">&times;</span>
+                    <div id="biscoito-frase-resultado"></div>
+                    <div id="biscoito-cupom-resultado" class="hidden"></div>
+                </div>
+            </div>
+        </div>
+        <div id="czk-banner-oferta-pessoal" class="hidden px-5 mt-4"></div>
+        <div id="czk-banner-cupom-publico" class="hidden px-5 mt-4"></div>
+        <div id="czk-banner-sorteio" class="hidden px-5 mt-4"></div>
+        <div id="czk-banner-premio-sorteio" class="hidden px-5 mt-4"></div>
+        <section class="px-5 mt-6"><div class="flex items-center gap-2 mb-3"><i class="fas fa-crown text-blue-500 text-xs"></i><h2 class="text-sm uppercase font-bold tracking-wider titulo-3d">✨ Seleção do Chef ✨</h2><i class="fas fa-fire fire-3d text-base"></i></div><div class="carousel-wrapper carousel-spotlight w-full overflow-hidden"><div id="carousel-destaques" class="carousel-track-animated"></div></div></section>
+        <section class="px-5 mt-8"><div id="filtro-categorias-cliente-container" class="flex gap-4 overflow-x-auto border-b border-white/15 pb-2 mb-4"></div><div id="cardapio-container" class="space-y-4"></div></section>
+        <footer class="mt-12 p-6 border-t border-white/15 bg-black/30 text-center text-[11px] text-white/50"><div id="footer-logo-container" class="mb-2 flex justify-center"></div><p id="footer-nome-text" class="text-blue-500 font-extrabold text-base tracking-wide" style="text-shadow:0 1px 3px rgba(0,0,0,0.6);">Carregando...</p><p id="footer-cnpj-text" class="mt-0.5"></p><p id="footer-endereco-text" class="mt-1"><i class="fas fa-map-marker-alt text-blue-400 mr-1"></i> Carregando...</p><p class="mt-1"><a id="footer-contato-link" href="#" target="_blank" rel="noopener" class="hover:text-green-400 transition-colors"><i class="fab fa-whatsapp text-green-500 mr-1"></i> WhatsApp</a></p><p id="footer-instagram-p" class="mt-1 hidden"><a id="footer-instagram-link" href="#" target="_blank" rel="noopener" class="hover:text-pink-400 transition-colors"><i class="fab fa-instagram text-pink-400 mr-1"></i> <span id="footer-instagram-texto">Instagram</span></a></p><div class="w-full h-32 rounded-xl overflow-hidden border border-white/15" style="margin-top:16px;"><iframe id="mapa-iframe" class="w-full h-full border-0" title="Mapa"></iframe></div></footer>
+    </div>
 
     <!-- MODAL CARRINHO (COM SELEÇÃO DE ENDEREÇO DETALHADA) -->
+    <div id="modal-carrinho" class="fixed inset-0 z-50 bg-[#13223a]/98 hidden items-center justify-center p-4 backdrop-blur-md">
+        <div class="glass-card rounded-2xl w-full max-w-lg border border-blue-700/60 overflow-hidden shadow-2xl">
+            <div class="bg-blue-900/20 p-5 flex justify-between items-center border-b border-blue-800/50"><h2 class="text-2xl font-bold flex items-center gap-2"><i class="fas fa-receipt text-blue-500"></i> Seu Carrinho</h2><button onclick="fecharModalCarrinho()" class="text-3xl text-white/50 hover:text-blue-400">&times;</button></div>
+            <div class="p-5 max-h-[50vh] overflow-y-auto">
+                <div id="lista-carrinho" class="space-y-3"></div>
+                <div id="bloco-cupom-carrinho" class="border-t border-white/15 pt-4 mt-3 space-y-2">
+                    <label class="text-xs text-white/60 font-semibold uppercase">Cupom de desconto</label>
+                    <div id="lembrete-cupom-carrinho" class="hidden"></div>
+                    <div class="flex gap-2 mt-1">
+                        <input type="text" id="input-cupom" placeholder="Digite o código" style="text-transform:uppercase;" class="flex-1 rounded-xl p-2 text-sm">
+                        <button type="button" onclick="aplicarCupom()" id="btn-aplicar-cupom" class="bg-blue-700 hover:bg-blue-600 px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap">Aplicar</button>
+                    </div>
+                    <p id="cupom-mensagem" class="text-xs"></p>
+                </div>
+                <div class="border-t border-white/15 pt-4 mt-3 space-y-2">
+                    <div id="bloco-mesa-carrinho" class="hidden bg-blue-900/20 border border-blue-700/40 rounded-xl p-3 text-sm"><i class="fas fa-utensils text-amber-400 mr-1"></i> Pedido para <strong id="bloco-mesa-carrinho-nome"></strong> — o pagamento é feito no caixa, não aqui pelo app.</div>
+                    <div id="bloco-tipo-entrega-carrinho">
+                        <label class="text-xs text-white/60 font-semibold uppercase">Tipo de entrega</label>
+                        <div class="flex gap-4 mt-1"><label class="flex items-center gap-2 text-white/80 text-sm"><input type="radio" name="tipo-entrega" value="entrega" checked onchange="atualizarFrete()"> Entrega</label><label class="flex items-center gap-2 text-white/80 text-sm"><input type="radio" name="tipo-entrega" value="retirada" onchange="atualizarFrete()"> Retirada</label></div>
+                    </div>
+                    <div id="endereco-entrega-container" class="space-y-1">
+                        <label class="text-xs text-white/60 font-semibold uppercase">Endereço para entrega</label>
+                        <select id="endereco-entrega-select" class="w-full rounded-xl p-2 text-white border-blue-800 text-sm" onchange="atualizarFrete()">
+                            <option value="">Selecione um endereço</option>
+                        </select>
+                    </div>
+                    <div class="flex justify-between"><span>Subtotal</span><span id="subtotal-cart">R$ 0,00</span></div>
+                    <div id="desconto-cart-row" class="flex justify-between text-green-400 hidden"><span><i class="fas fa-tags"></i> Desconto <span id="desconto-cupom-codigo"></span></span><span id="desconto-cart">-R$ 0,00</span></div>
+                    <div id="linha-frete-cart" class="flex justify-between text-blue-400"><span><i class="fas fa-truck-fast"></i> Entrega</span><span id="frete-cart">R$ 0,00</span></div>
+                    <div id="taxa-maquininha-row" class="flex justify-between text-yellow-400 hidden"><span><i class="fas fa-credit-card"></i> Taxa maquininha</span><span id="taxa-maquininha-valor">R$ 0,00</span></div>
+                    <div class="flex justify-between text-xl font-black pt-2 border-t border-white/15"><span>TOTAL</span><span id="total-cart" class="text-blue-500 text-2xl">R$ 0,00</span></div>
+                    <p id="estimativa-tempo-cart" class="text-xs text-white/60 mt-1"><i class="far fa-clock text-blue-400"></i> Tempo estimado de entrega: 30 - 50 minutos</p>
+                </div>
+                <div id="bloco-forma-pagamento-carrinho" class="mt-5">
+                    <label class="text-xs text-white/60 font-semibold uppercase">Como você quer pagar?</label>
+                    <div class="flex gap-4 mt-1">
+                        <label class="flex items-center gap-2 text-white/80 text-sm"><input type="radio" name="modo-pagamento" value="entrega" checked onchange="alternarModoPagamento()"> Pagamento na entrega</label>
+                        <label class="flex items-center gap-2 text-white/80 text-sm"><input type="radio" name="modo-pagamento" value="app" onchange="alternarModoPagamento()"> Pagamento pelo app</label>
+                    </div>
+                </div>
+                <div id="pagamento-entrega-area" class="mt-3">
+                    <label class="text-xs text-white/60 font-semibold uppercase">Pagamento na entrega</label>
+                    <select id="tipo-pagamento-entrega" class="w-full rounded-xl p-3 mt-1 text-white border-blue-800" onchange="atualizarTaxaMaquininha(); atualizarCamposTroco()">
+                        <option value="PIX">📱 PIX</option>
+                        <option value="Cartão Crédito" id="opcao-cartao-credito-entrega">💳 Cartão Crédito (acréscimo de R$ 3,00)</option>
+                        <option value="Cartão Débito">💳 Cartão Débito</option>
+                        <option value="Dinheiro">💵 Dinheiro</option>
+                    </select>
+                    <p class="text-[11px] text-white/50 mt-1"><i class="fas fa-motorcycle mr-1"></i> Você paga direto ao entregador na hora da entrega.</p>
+                    <div id="troco-entrega-wrap" class="hidden mt-2">
+                        <label class="text-[11px] text-white/60 uppercase" for="input-troco-entrega">Precisa de troco? Para quanto?</label>
+                        <input type="text" id="input-troco-entrega" inputmode="decimal" placeholder="Ex: 50,00 (deixe em branco se não precisar)" class="w-full rounded-xl p-2 mt-1 text-white border-blue-800 text-sm">
+                    </div>
+                </div>
+                <div id="pagamento-app-area" class="mt-3 hidden"><label class="text-xs text-white/60 font-semibold uppercase">Forma de pagamento pelo app</label><select id="tipo-pagamento" class="w-full rounded-xl p-3 mt-1 text-white border-blue-800" onchange="atualizarTaxaMaquininha(); atualizarExibicaoPix(); atualizarExibicaoBrickCartao(); atualizarCamposTroco()"><option value="PIX">📱 PIX</option><option value="Cartão Crédito">💳 Cartão Crédito</option><option value="Cartão Débito">💳 Cartão Débito</option></select><div id="troco-app-wrap" class="hidden mt-2"><label class="text-[11px] text-white/60 uppercase" for="input-troco-app">Precisa de troco? Para quanto?</label><input type="text" id="input-troco-app" inputmode="decimal" placeholder="Ex: 50,00 (deixe em branco se não precisar)" class="w-full rounded-xl p-2 mt-1 text-white border-blue-800 text-sm"></div><div id="pix-info-area" class="pix-info hidden">
+                    <div id="mp-pix-form">
+                        <label class="text-xs text-white/60 font-semibold uppercase">CPF do pagador</label>
+                        <p class="text-[10px] text-white/40 mb-1">Exigido pelo Mercado Pago para gerar o Pix</p>
+                        <input type="text" id="mp-pix-cpf" inputmode="numeric" placeholder="000.000.000-00" maxlength="14" class="w-full rounded-xl p-2 text-white border-blue-800 text-sm" oninput="mpFormatarCpf(this)">
+                        <button type="button" onclick="gerarPixMercadoPago()" id="mp-pix-btn-gerar" class="w-full bg-blue-700 hover:bg-blue-600 py-2.5 rounded-xl text-sm font-bold mt-3 flex items-center justify-center gap-2"><i class="fas fa-qrcode"></i> Gerar QR Code Pix</button>
+                        <p id="mp-pix-erro" class="text-[11px] text-red-400 mt-2 hidden"></p>
+                    </div>
+                    <div id="mp-pix-qr-wrap" class="hidden text-center mt-1">
+                        <img id="mp-pix-qr-img" class="mx-auto rounded-lg border border-white/20 bg-white p-1" style="width:180px;height:180px;" alt="QR Code Pix">
+                        <div class="flex justify-between items-center mt-3 bg-black/30 rounded-lg p-2 gap-2">
+                            <span class="text-[10px] text-white/60 truncate">Pix Copia e Cola</span>
+                            <button type="button" class="copy-btn" onclick="copiarPixCopiaCola()"><i class="far fa-copy"></i> Copiar</button>
+                        </div>
+                        <p id="mp-pix-status" class="text-xs text-yellow-400 mt-3"><i class="fas fa-circle-notch fa-spin"></i> Aguardando pagamento...</p>
+                        <button type="button" onclick="verificarPixAgora()" class="text-[11px] text-blue-300 underline mt-2">Já paguei, verificar agora</button>
+                    </div>
+                </div>
+                <div id="mp-cardbrick-wrap" class="hidden mt-4">
+                    <div id="cardPaymentBrick_container"></div>
+                    <p class="text-[11px] text-white/50 mt-2 flex items-center gap-1"><i class="fas fa-lock"></i> Pagamento processado com segurança pelo Mercado Pago.</p>
+                    <p id="mp-brick-erro" class="text-[11px] text-red-400 mt-2 hidden"></p>
+                </div>
+                </div>
+                <div class="mt-4">
+                    <label class="text-xs text-white/60 font-semibold uppercase" for="input-observacoes-pedido">Observações do pedido</label>
+                    <textarea id="input-observacoes-pedido" rows="2" maxlength="300" placeholder="Ex: sem cebola, alergia a amendoim, interfone não funciona..." class="w-full rounded-xl p-3 mt-1 text-white border-blue-800 text-sm resize-none"></textarea>
+                </div>
+                <button id="btn-confirmar-pedido" onclick="finalizarPedido()" class="w-full btn-red-czk py-3.5 rounded-xl font-bold mt-6 flex items-center justify-center gap-2"><i class="fas fa-check-circle"></i> CONFIRMAR PEDIDO</button>
+            </div>
+        </div>
+    </div>
 
     <!-- MODAL: Oferta de combo — sugere, por cima da tela do carrinho, um item complementar
          com desconto (configurado em Admin > Cardápio > Opções avançadas > "Item para
@@ -2589,8 +2916,42 @@
     </div>
 
     <!-- MODAL DE CONFIRMAÇÃO/RESUMO DO PEDIDO (revisão final antes de enviar) -->
+    <div id="modal-confirmar-pedido" class="fixed inset-0 z-[60] bg-[#13223a]/98 hidden items-end md:items-center justify-center p-4 backdrop-blur-md">
+        <div class="glass-card rounded-2xl w-full max-w-lg border border-blue-700/60 overflow-hidden shadow-2xl">
+            <div class="bg-blue-900/20 p-5 flex justify-between items-center border-b border-blue-800/50">
+                <h2 class="text-2xl font-bold flex items-center gap-2"><i class="fas fa-clipboard-check text-blue-500"></i> Confira seu pedido</h2>
+                <button onclick="fecharModalConfirmarPedido()" class="text-3xl text-white/50 hover:text-blue-400">&times;</button>
+            </div>
+            <div id="czk-banner-oferta-confirmacao" class="hidden px-5 pt-4"></div>
+            <div class="p-5 max-h-[60vh] overflow-y-auto space-y-4" id="resumo-confirmacao-pedido"></div>
+            <div class="p-5 pt-0 flex gap-3">
+                <button onclick="fecharModalConfirmarPedido()" class="flex-1 bg-black/10 hover:bg-black/20 py-3 rounded-xl font-bold">Voltar e editar</button>
+                <button onclick="confirmarEnvioFinalPedido()" class="flex-1 btn-red-czk py-3 rounded-xl font-bold flex items-center justify-center gap-2"><i class="fas fa-paper-plane"></i> Confirmar e enviar</button>
+            </div>
+        </div>
+    </div>
 
     <!-- MODAL DE PEDIDO CONFIRMADO -->
+    <div id="modal-pedido-enviado" class="fixed inset-0 z-50 bg-[#13223a]/98 hidden items-center justify-center p-4 backdrop-blur-md">
+        <div class="glass-card rounded-2xl w-full max-w-sm border border-blue-700/60 overflow-hidden shadow-2xl">
+            <div class="p-6 text-center">
+                <i class="fas fa-check-circle text-5xl text-green-500 mb-3"></i>
+                <h3 id="titulo-pedido-enviado" class="text-xl font-bold mb-2">Pedido enviado!</h3>
+                <p id="numero-pedido-enviado" class="text-lg font-bold text-blue-500 mb-2"></p>
+                <p id="msg-pedido-enviado" class="text-sm text-white/70 mb-5">Seu pedido foi recebido e já está sendo preparado. Você será notificado sobre as próximas etapas.</p>
+                <div id="bloco-comanda-pedido-enviado" class="hidden bg-black/10 rounded-xl p-4 mb-5 text-left">
+                    <p class="text-xs text-white/60 font-semibold uppercase mb-1"><i class="fas fa-receipt mr-1"></i> Comanda <span id="comanda-mesa-nome-enviado"></span></p>
+                    <p class="text-2xl font-black text-blue-500" id="comanda-total-enviado">R$ 0,00</p>
+                    <p class="text-[11px] text-white/50 mt-1">Pagamento é feito no caixa, quando encerrar por aqui.</p>
+                </div>
+                <div class="flex gap-3">
+                    <button id="btn-pedir-mais-enviado" onclick="fecharModalPedidoEnviado()" class="hidden flex-1 bg-black/10 hover:bg-black/20 py-2.5 rounded-xl font-bold">Pedir mais</button>
+                    <button id="btn-voltar-mesas-enviado" onclick="fecharModalPedidoEnviado(); voltarParaPainelGarcom();" class="hidden flex-1 bg-indigo-700 hover:bg-indigo-600 py-2.5 rounded-xl font-bold"><i class="fas fa-th-large mr-1"></i> Voltar às mesas</button>
+                    <button onclick="fecharModalPedidoEnviado()" class="btn-red-czk py-2.5 px-10 rounded-xl font-bold flex items-center justify-center gap-2 mx-auto flex-1" style="color:#fff;">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- MODAL GENÉRICO DE ALERTA (substitui o czkAlert() nativo do navegador) -->
     <div id="czk-modal-alert" class="fixed inset-0 z-[60] bg-[#13223a]/98 hidden items-center justify-center p-4 backdrop-blur-md">
@@ -2821,6 +3182,18 @@
          do #app-shell (que cresce com o cardápio) em vez da janela visível, então esses modais
          apareciam "centralizados" dentro de uma caixa gigante e acabavam surgindo grudados lá
          embaixo. Ficando fora do #app-shell, eles centralizam de verdade na tela visível. -->
+    <div id="modal-historico-cliente" class="fixed inset-0 z-50 bg-[#13223a]/98 hidden items-center justify-center p-4 backdrop-blur-md">
+        <div class="glass-card rounded-2xl w-full max-w-2xl border border-blue-700/60 overflow-hidden shadow-2xl max-h-[85vh] flex flex-col">
+            <div class="bg-blue-900/20 p-5 flex justify-between items-center border-b border-blue-800/50">
+                <h2 id="historico-cliente-titulo" class="text-2xl font-bold flex items-center gap-2"><i class="far fa-clock text-blue-500"></i> Meus Pedidos</h2>
+                <div class="flex items-center gap-3">
+                    <button onclick="atualizarHistoricoCliente()" class="text-white/70 hover:text-white text-sm bg-black/30 px-3 py-1 rounded-full"><i class="fas fa-sync-alt"></i> Atualizar</button>
+                    <button onclick="fecharModalHistoricoCliente()" class="text-3xl text-white/50 hover:text-blue-400">&times;</button>
+                </div>
+            </div>
+            <div id="lista-pedidos-cliente" class="p-5 overflow-y-auto flex-1 space-y-4"></div>
+        </div>
+    </div>
 
     <div id="czk-modal-confirm" class="fixed inset-0 z-[60] bg-[#13223a]/98 hidden items-center justify-center p-4 backdrop-blur-md">
         <div class="glass-card rounded-2xl w-full max-w-sm border border-blue-700/60 overflow-hidden shadow-2xl">
@@ -14334,9 +14707,8 @@ ${esgotado ? '' : `<div class="badge-destaque-3d"><span class="fire-icon fire-3d
             // carregado em paralelo, por trás dela - não espera ela fechar pra começar.
             detectarModoMesa();
             carregarPromoNotif();
-            const czkScreenLoginEl = document.getElementById("screen-login");
             const czkVaiMostrarPromo = !clienteAtual
-                && (!czkScreenLoginEl || czkScreenLoginEl.style.display !== "none")
+                && document.getElementById("screen-login").style.display !== "none"
                 && !!promoNotifConfig.ativa;
             if(czkVaiMostrarPromo) {
                 requestAnimationFrame(() => requestAnimationFrame(exibirNotificacaoPromo));
@@ -14604,22 +14976,5 @@ ${esgotado ? '' : `<div class="badge-destaque-3d"><span class="fire-icon fire-3d
 
         carregarDados();
     </script>
-    <!-- Elementos "stub" invisíveis: o admin não tem essas telas (são do cliente),
-         mas o JS compartilhado ainda faz getElementById nelas em alguns pontos.
-         Existem aqui só para evitar erro de "null" - nunca são exibidos. -->
-    <div id="screen-login" style="display:none"></div>
-    <div id="screen-auth" style="display:none"></div>
-    <div id="app-cliente" style="display:none"></div>
-    <div id="modal-carrinho" style="display:none"></div>
-    <div id="modal-historico-cliente" style="display:none"></div>
-    <div id="modal-confirmar-pedido" style="display:none"></div>
-    <div id="modal-config-conta" style="display:none"></div>
-    <div id="modal-enderecos" style="display:none"></div>
-    <div id="modal-novo-endereco" style="display:none"></div>
-    <div id="modal-detalhe-produto" style="display:none"></div>
-    <div id="modal-suporte-cliente" style="display:none"></div>
-    <div id="modal-chat-suporte" style="display:none"></div>
-    <div id="modal-mapa-entrega" style="display:none"></div>
-    <div id="modal-pedido-enviado" style="display:none"></div>
 </body>
 </html>
