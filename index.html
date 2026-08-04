@@ -1035,16 +1035,52 @@
         @media (prefers-reduced-motion: reduce) { .czk-confete { animation: none; display: none; } .czk-sorteio-ganhou-card { animation: none; } }
 
         /* Sorteio expandido (tela cheia): pra usar durante lives de Instagram/Facebook etc.
-           Mostra uma "máquina de caça-níquel" com 3 rolos girando números dos participantes,
-           que vão parando um a um até revelar o número/ganhador sorteado. */
-        #czk-modal-sorteio-expandido { position: fixed; inset: 0; z-index: 90; display: none; align-items: center; justify-content: center; padding: 24px; background: radial-gradient(circle at center, #1e1b4b 0%, #0b1220 100%); overflow: hidden; }
+           Usa a IMAGEM REAL enviada pelo cliente como fundo (sem recriar nada em CSS).
+           Os elementos dinâmicos (nome do sorteado e os 3 números) ficam em caixas
+           transparentes posicionadas em cima da foto, exatamente nas coordenadas
+           medidas na imagem original (percentuais, pra continuar alinhado em qualquer
+           tamanho de tela). O botão "Sortear agora" já vem desenhado na própria imagem —
+           por isso o botão real aqui é invisível, só um "hitbox" clicável na posição dele. */
+        #czk-modal-sorteio-expandido {
+            position: fixed; inset: 0; z-index: 90; display: none; align-items: center; justify-content: center;
+            padding: 20px; overflow: hidden; background: #4a0808;
+        }
         #czk-modal-sorteio-expandido.flex { display: flex; }
-        .czk-slot-rolo { background: linear-gradient(180deg,#3b0764,#0b1220); border: 3px solid #a855f7; border-radius: 20px; padding: 14px 10px; min-width: 150px; box-shadow: 0 0 35px rgba(168,85,247,0.55), inset 0 2px 10px rgba(255,255,255,0.08); }
-        .czk-slot-janela { background: linear-gradient(180deg,#050810,#111827 50%,#050810); border-radius: 12px; padding: 14px 8px; box-shadow: inset 0 3px 12px rgba(0,0,0,0.65), inset 0 -3px 8px rgba(255,255,255,0.05); }
-        .czk-slot-rolo span { display: block; font-family: 'Share Tech Mono', monospace; font-size: clamp(2.4rem, 9vw, 3.8rem); font-weight: 700; color: #facc15; text-shadow: 0 0 14px rgba(250,204,21,0.65); }
+
+        .czk-sorteio-legenda { text-align: center; margin-bottom: 14px; }
+        .czk-sorteio-legenda p:first-child { color: #f5c542; font-weight: 900; font-size: clamp(1rem, 3.4vw, 1.3rem); text-shadow: 0 2px 6px rgba(0,0,0,0.6); }
+        .czk-sorteio-legenda p:last-child { color: rgba(255,255,255,0.75); font-size: clamp(0.75rem, 2.6vw, 0.9rem); }
+
+        .czk-sorteio-stage { position: relative; width: min(92vw, 760px); margin: 0 auto; aspect-ratio: 2752 / 1536; }
+        .czk-sorteio-stage img { width: 100%; height: 100%; display: block; object-fit: contain; border-radius: 14px; user-select: none; -webkit-user-drag: none; }
+
+        .czk-sorteio-overlay { position: absolute; }
+
+        /* Caixa preta abaixo de "VENCEDOR": nome de quem foi sorteado */
+        .czk-sorteio-nome-pos { left: 39.03%; top: 45.83%; width: 22.02%; height: 7.95%; display: flex; align-items: center; justify-content: center; }
+        #sorteio-expandido-resultado-nome {
+            font-family: 'Arial Black', Arial, sans-serif; font-weight: 900; text-align: center;
+            font-size: clamp(0.6rem, 2.6vw, 1.15rem); line-height: 1.05; max-width: 100%; padding: 0 4%;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            background: linear-gradient(180deg,#fff6cc 0%,#f9dd7a 25%,#f5c542 55%,#b8720a 100%);
+            -webkit-background-clip: text; background-clip: text; color: transparent;
+        }
+
+        /* 3 janelas dos rolos: cobrem o "#--" da imagem com o número real, no mesmo lugar */
+        .czk-sorteio-reel-pos { display: flex; align-items: center; justify-content: center; }
+        .czk-sorteio-reel-patch { position: absolute; inset: 6% 5%; background: #e6dbd2; border-radius: 16%; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 2px 6px rgba(0,0,0,0.15); }
+        .czk-sorteio-reel-num { position: relative; font-family: 'Arial Black', Arial, sans-serif; font-weight: 900; color: #9c1c1c; font-size: clamp(1.1rem, 5.4vw, 2.3rem); text-shadow: 1px 1px 0 rgba(0,0,0,0.15); }
         .czk-slot-girando { animation: czkSlotGirar 0.12s linear infinite; }
         @keyframes czkSlotGirar { 0% { transform: translateY(-3px); opacity: 0.55; } 50% { transform: translateY(3px); opacity: 1; } 100% { transform: translateY(-3px); opacity: 0.55; } }
         @media (prefers-reduced-motion: reduce) { .czk-slot-girando { animation: none; } }
+
+        /* Botão "Sortear agora" já está desenhado na imagem — isto é só a área clicável, invisível */
+        .czk-sorteio-btn-pos {
+            left: 38.70%; top: 88.61%; width: 22.56%; height: 9.44%;
+            background: transparent; border: none; cursor: pointer; border-radius: 999px; padding: 0;
+        }
+        .czk-sorteio-btn-pos:disabled { cursor: not-allowed; }
+        .czk-sorteio-btn-pos:disabled::after { content: ''; position: absolute; inset: 0; background: rgba(20,10,10,0.55); border-radius: inherit; }
         @keyframes czkNeonPulse {
             0%, 100% { filter: brightness(1); transform: scale(1); }
             50% { filter: brightness(1.35); transform: scale(1.015); }
@@ -2585,12 +2621,12 @@
     </div>
 
     <!-- MODAL: MENSAGEM FINAL DE PEDIDO CANCELADO -->
-    <div id="modal-pedido-cancelado" class="fixed inset-0 z-50 bg-[#13223a]/98 hidden items-center justify-center p-4 backdrop-blur-md">
+    <div id="modal-pedido-cancelado" class="fixed inset-0 z-[80] bg-[#13223a]/98 hidden items-center justify-center p-4 backdrop-blur-md">
         <div class="glass-card rounded-2xl w-full max-w-md border border-red-700/60 overflow-hidden shadow-2xl text-center p-8">
             <i class="fas fa-ban text-red-500 text-5xl mb-4"></i>
             <h2 class="text-xl font-bold mb-2">Pedido cancelado</h2>
             <p class="text-sm opacity-80" id="texto-pedido-cancelado-msg">Seu pedido foi cancelado com sucesso. Aguarde 24 horas para o estorno dos valores. Agradecemos a preferência.</p>
-            <button onclick="fecharModalPedidoCancelado()" class="mt-6 w-full btn-red-czk text-white py-3 rounded-xl font-bold">Fechar</button>
+            <button onclick="fecharModalPedidoCancelado()" class="mt-6 w-full btn-red-czk py-3 rounded-xl font-bold" style="color:#fff;">Fechar</button>
         </div>
     </div>
 
@@ -2893,23 +2929,23 @@
     </div>
 
     <!-- MODAL: 3 OPÇÕES DE DESCONTO PARA COMPLEMENTAR O PEDIDO -->
-    <div id="modal-ofertas-desconto" class="fixed inset-0 z-[64] bg-black/70 hidden items-center justify-center p-4 backdrop-blur-md">
-        <div class="glass-card rounded-2xl w-full max-w-4xl border-2 overflow-hidden shadow-2xl" style="border-color:#34e6b0; box-shadow: 0 0 10px 2px rgba(52,230,176,0.45), 0 0 26px 6px rgba(52,230,176,0.25); max-height: 85vh; display: flex; flex-direction: column;">
+    <div id="modal-ofertas-desconto" class="fixed inset-0 z-[64] bg-black/70 hidden items-center justify-center p-2 sm:p-4 backdrop-blur-md">
+        <div class="glass-card rounded-2xl w-full max-w-4xl border-2 overflow-hidden shadow-2xl" style="border-color:#34e6b0; box-shadow: 0 0 10px 2px rgba(52,230,176,0.45), 0 0 26px 6px rgba(52,230,176,0.25); max-height: 90vh; display: flex; flex-direction: column;">
             
             <!-- CABEÇALHO -->
-            <div class="bg-emerald-600/20 p-6 border-b border-emerald-500/30 shrink-0">
-                <div class="text-[10px] font-bold uppercase tracking-widest" style="color:#0f9d70;"><i class="fas fa-bolt mr-2"></i>Oferta exclusiva</div>
-                <h2 class="text-2xl font-black mt-3" style="color:#16233d;">Que tal completar seu pedido?</h2>
+            <div class="bg-emerald-600/20 p-3 sm:p-6 border-b border-emerald-500/30 shrink-0">
+                <div class="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest" style="color:#0f9d70;"><i class="fas fa-bolt mr-2"></i>Oferta exclusiva</div>
+                <h2 class="text-base sm:text-2xl font-black mt-2 sm:mt-3" style="color:#16233d;">Que tal completar seu pedido?</h2>
             </div>
 
             <!-- CONTEÚDO COM OS 3 PRODUTOS -->
-            <div class="p-6 overflow-y-auto flex-1">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-5" id="container-ofertas-desconto"></div>
+            <div class="p-2 sm:p-6 overflow-y-auto flex-1">
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-5" id="container-ofertas-desconto"></div>
             </div>
 
             <!-- RODAPÉ -->
-            <div class="p-5 border-t border-white/15 flex justify-end shrink-0">
-                <button onclick="fecharOfertasDesconto()" class="py-2.5 px-7 rounded-xl font-bold text-sm transition hover:bg-black/10" style="background:rgba(22,35,61,0.08); color:#16233d;">Agora não</button>
+            <div class="p-3 sm:p-5 border-t border-white/15 flex justify-end shrink-0">
+                <button onclick="fecharOfertasDesconto()" class="py-2 px-5 sm:py-2.5 sm:px-7 rounded-xl font-bold text-xs sm:text-sm transition hover:bg-black/10" style="background:rgba(22,35,61,0.08); color:#16233d;">Agora não</button>
             </div>
 
         </div>
@@ -3011,25 +3047,39 @@
         </div>
     </div>
 
-    <!-- MODAL: SORTEIO EXPANDIDO (tela cheia, pra fazer o sorteio ao vivo no Instagram/Facebook etc.) -->
+    <!-- MODAL: SORTEIO EXPANDIDO (tela cheia, usando a foto real enviada pelo cliente como fundo — pra fazer o sorteio ao vivo no Instagram/Facebook etc.) -->
     <div id="czk-modal-sorteio-expandido">
-        <div id="sorteio-expandido-confetes" style="position:absolute; inset:0; pointer-events:none; overflow:hidden;"></div>
-        <button onclick="fecharSorteioExpandido()" class="absolute top-5 right-5 text-white/60 hover:text-white text-3xl"><i class="fas fa-compress"></i></button>
-        <div class="w-full max-w-2xl text-center" style="position:relative; z-index:2;">
-            <p id="sorteio-expandido-nome" class="text-white text-2xl md:text-3xl font-black mb-1"></p>
-            <p id="sorteio-expandido-premio" class="text-yellow-300 text-sm md:text-base font-semibold mb-10"></p>
+        <div id="sorteio-expandido-confetes" style="position:absolute; inset:0; pointer-events:none; overflow:hidden; z-index:5;"></div>
 
-            <div class="flex items-center justify-center gap-3 md:gap-5 mb-10">
-                <div class="czk-slot-rolo"><div class="czk-slot-janela"><span id="sorteio-slot-0">#--</span></div></div>
-                <div class="czk-slot-rolo"><div class="czk-slot-janela"><span id="sorteio-slot-1">#--</span></div></div>
-                <div class="czk-slot-rolo"><div class="czk-slot-janela"><span id="sorteio-slot-2">#--</span></div></div>
+        <button onclick="fecharSorteioExpandido()" class="absolute top-5 right-5 text-white/60 hover:text-white text-3xl" style="z-index:10;"><i class="fas fa-compress"></i></button>
+
+        <div style="position:relative; z-index:2; width:100%;">
+            <div class="czk-sorteio-legenda">
+                <p id="sorteio-expandido-nome"></p>
+                <p id="sorteio-expandido-premio"></p>
             </div>
 
-            <button id="sorteio-expandido-btn" onclick="sortearAgoraExpandido()" class="disabled:opacity-40 disabled:cursor-not-allowed px-10 py-4 rounded-full text-lg font-black text-white" style="background:linear-gradient(to right,#7e22ce,#1d4ed8);"><i class="fas fa-dice mr-2"></i> Sortear agora</button>
+            <div class="czk-sorteio-stage">
+                <img src="czk-sorteio-bg2.jpg" alt="Sorteio">
 
-            <div id="sorteio-expandido-resultado" class="hidden mt-8">
-                <p class="text-white/60 text-sm uppercase tracking-wide">Ganhador</p>
-                <p id="sorteio-expandido-resultado-nome" class="text-white text-2xl md:text-3xl font-black mt-1"></p>
+                <!-- Nome de quem foi sorteado (aparece dentro da caixa preta, só depois do sorteio) -->
+                <div id="sorteio-expandido-resultado" class="czk-sorteio-overlay czk-sorteio-nome-pos hidden">
+                    <p id="sorteio-expandido-resultado-nome"></p>
+                </div>
+
+                <!-- 3 números do sorteio, exatamente em cima dos rolos da imagem -->
+                <div class="czk-sorteio-overlay czk-sorteio-reel-pos" style="left:32.34%; top:65.43%; width:8.36%; height:10.94%;">
+                    <div class="czk-sorteio-reel-patch"><span id="sorteio-slot-0" class="czk-sorteio-reel-num">#--</span></div>
+                </div>
+                <div class="czk-sorteio-overlay czk-sorteio-reel-pos" style="left:45.27%; top:65.36%; width:8.21%; height:11.20%;">
+                    <div class="czk-sorteio-reel-patch"><span id="sorteio-slot-1" class="czk-sorteio-reel-num">#--</span></div>
+                </div>
+                <div class="czk-sorteio-overlay czk-sorteio-reel-pos" style="left:58.14%; top:65.43%; width:8.21%; height:11.07%;">
+                    <div class="czk-sorteio-reel-patch"><span id="sorteio-slot-2" class="czk-sorteio-reel-num">#--</span></div>
+                </div>
+
+                <!-- "Sortear agora" já está desenhado na imagem: isto é só a área clicável -->
+                <button id="sorteio-expandido-btn" onclick="sortearAgoraExpandido()" class="czk-sorteio-overlay czk-sorteio-btn-pos" style="left:38.70%; top:88.61%; width:22.56%; height:9.44%;" aria-label="Sortear agora"></button>
             </div>
         </div>
     </div>
@@ -5975,37 +6025,37 @@ ${esgotado ? '' : `<div class="badge-destaque-3d"><span class="fire-icon fire-3d
                 const imagemProduto = produto.img && produto.img.trim() !== '' ? produto.img : 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22300%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22300%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22 font-size=%2224%22%3ESem imagem%3C/text%3E%3C/svg%3E';
 
                 const html = `
-                    <div class="czk-oferta-neon-card rounded-2xl border-2 overflow-hidden transition-all hover:shadow-xl hover:scale-102" id="oferta-card-${oferta.produtoId}" style="border-color:#34e6b0; background:#fffdf6; border-radius: 16px; animation-delay: ${index * 1.1}s;">
+                    <div class="czk-oferta-neon-card rounded-2xl border-2 overflow-hidden transition-all hover:shadow-xl hover:scale-102" id="oferta-card-${oferta.produtoId}" style="border-color:#34e6b0; background:#fffdf6; border-radius: 14px; animation-delay: ${index * 1.1}s;">
                         <div class="relative aspect-square bg-gradient-to-b from-gray-100 to-gray-50 overflow-hidden">
                             <img src="${imagemProduto}" alt="${produto.nome}" class="w-full h-full object-cover" loading="lazy" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22300%22%3E%3Crect fill=%22%23e0e0e0%22 width=%22300%22 height=%22300%22/%3E%3C/svg%3E'">
                             
                             <!-- BADGE DE DESCONTO -->
-                            <div class="absolute top-3 right-3 bg-red-600 text-white px-3 py-2 rounded-full font-black text-sm" style="box-shadow: 0 4px 12px rgba(220,38,38,0.6);">
+                            <div class="absolute top-1.5 right-1.5 sm:top-3 sm:right-3 bg-red-600 text-white px-1.5 py-1 sm:px-3 sm:py-2 rounded-full font-black text-[10px] sm:text-sm" style="box-shadow: 0 4px 12px rgba(220,38,38,0.6);">
                                 -${oferta.desconto}%
                             </div>
                             
                             <!-- ECONOMIA NA IMAGEM -->
-                            <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent pt-8 pb-3 px-3 text-white text-center">
-                                <div class="text-sm font-bold">💰 Economiza</div>
-                                <div class="text-lg font-black">R$ ${economiza.toFixed(2)}</div>
+                            <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent pt-6 sm:pt-8 pb-1.5 sm:pb-3 px-1.5 sm:px-3 text-white text-center">
+                                <div class="text-[10px] sm:text-sm font-bold">💰 Economiza</div>
+                                <div class="text-sm sm:text-lg font-black">R$ ${economiza.toFixed(2)}</div>
                             </div>
                         </div>
 
                         <!-- INFORMAÇÕES -->
-                        <div class="p-4 space-y-3">
+                        <div class="p-2 sm:p-4 space-y-1.5 sm:space-y-3">
                             <div>
-                                <h4 class="font-bold text-sm" style="color:#16233d;">${produto.nome}</h4>
+                                <h4 class="font-bold text-xs sm:text-sm leading-tight" style="color:#16233d;">${produto.nome}</h4>
                             </div>
                             
                             <!-- PREÇOS -->
-                            <div class="space-y-1">
-                                <div class="text-xs line-through" style="color:rgba(22,35,61,0.5);">R$ ${produto.preco.toFixed(2)}</div>
-                                <div class="text-2xl font-black" style="color:#0f9d70;">R$ ${precoFinal.toFixed(2)}</div>
+                            <div class="space-y-0.5 sm:space-y-1">
+                                <div class="text-[10px] sm:text-xs line-through" style="color:rgba(22,35,61,0.5);">R$ ${produto.preco.toFixed(2)}</div>
+                                <div class="text-base sm:text-2xl font-black" style="color:#0f9d70;">R$ ${precoFinal.toFixed(2)}</div>
                             </div>
 
                             <!-- BOTÃO -->
-                            <button onclick="adicionarOfertoAoCarrinho(${oferta.produtoId}, ${oferta.desconto})" class="czk-oferta-btn-adicionar w-full mt-3 py-3 px-4 rounded-lg font-bold text-sm bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white transition-all" style="box-shadow: 0 4px 12px rgba(16,181,129,0.3);">
-                                <i class="fas fa-check-circle mr-2"></i>Adicionar
+                            <button onclick="adicionarOfertoAoCarrinho(${oferta.produtoId}, ${oferta.desconto})" class="czk-oferta-btn-adicionar w-full mt-1.5 sm:mt-3 py-1.5 sm:py-3 px-2 sm:px-4 rounded-lg font-bold text-[11px] sm:text-sm bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white transition-all" style="box-shadow: 0 4px 12px rgba(16,181,129,0.3);">
+                                <i class="fas fa-check-circle mr-1 sm:mr-2"></i>Adicionar
                             </button>
                         </div>
                     </div>
@@ -6954,6 +7004,10 @@ ${esgotado ? '' : `<div class="badge-destaque-3d"><span class="fire-icon fire-3d
         function exibirMensagemPedidoCancelado(pedido) {
             const modal = document.getElementById("modal-pedido-cancelado");
             if(!modal) return;
+            // Fecha "Meus Pedidos" (se estiver aberto) antes de mostrar a confirmação,
+            // pra ela aparecer centralizada e na frente, em vez de atrás daquela tela.
+            const modalHistorico = document.getElementById("modal-historico-cliente");
+            if(modalHistorico && modalHistorico.style.display !== "none") { fecharModalHistoricoCliente(); }
             const pagoNaEntrega = (pedido.metodo || '').includes('na entrega');
             document.getElementById("texto-pedido-cancelado-msg").textContent = pagoNaEntrega
                 ? `Seu pedido ${formatarNumeroPedido(pedido)} foi cancelado com sucesso. Agradecemos a preferência.`
