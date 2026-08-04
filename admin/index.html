@@ -1035,53 +1035,52 @@
         @media (prefers-reduced-motion: reduce) { .czk-confete { animation: none; display: none; } .czk-sorteio-ganhou-card { animation: none; } }
 
         /* Sorteio expandido (tela cheia): pra usar durante lives de Instagram/Facebook etc.
-           Tema "cassino" vermelho/dourado (anel dourado, fundo vermelho com raios de luz,
-           rolos de caça-níquel brancos com números vermelhos) — inspirado no visual de
-           referência enviado pelo cliente. */
+           Usa a IMAGEM REAL enviada pelo cliente como fundo (sem recriar nada em CSS).
+           Os elementos dinâmicos (nome do sorteado e os 3 números) ficam em caixas
+           transparentes posicionadas em cima da foto, exatamente nas coordenadas
+           medidas na imagem original (percentuais, pra continuar alinhado em qualquer
+           tamanho de tela). O botão "Sortear agora" já vem desenhado na própria imagem —
+           por isso o botão real aqui é invisível, só um "hitbox" clicável na posição dele. */
         #czk-modal-sorteio-expandido {
             position: fixed; inset: 0; z-index: 90; display: none; align-items: center; justify-content: center;
-            padding: 24px; overflow: hidden;
-            background-image: url('czk-sorteio-bg.jpg');
-            background-size: cover; background-position: center; background-repeat: no-repeat;
-            background-color: #4a0808; /* cor de segurança enquanto a imagem carrega / caso não carregue */
+            padding: 20px; overflow: hidden; background: #4a0808;
         }
         #czk-modal-sorteio-expandido.flex { display: flex; }
 
-        /* (antigo bloco de ícones flutuantes removido — a imagem de fundo já traz o sushi/moedas prontos) */
+        .czk-sorteio-legenda { text-align: center; margin-bottom: 14px; }
+        .czk-sorteio-legenda p:first-child { color: #f5c542; font-weight: 900; font-size: clamp(1rem, 3.4vw, 1.3rem); text-shadow: 0 2px 6px rgba(0,0,0,0.6); }
+        .czk-sorteio-legenda p:last-child { color: rgba(255,255,255,0.75); font-size: clamp(0.75rem, 2.6vw, 0.9rem); }
 
-        /* Painel/anel dourado central, tipo "VENCEDOR" da imagem de referência */
-        .czk-sorteio-gold-panel {
-            position: relative; z-index: 2; text-align: center; margin: 0 auto;
-            width: min(80vw, 340px); height: min(80vw, 340px);
-            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
-            padding: 24px; border-radius: 50%; overflow: hidden;
-            background: radial-gradient(circle at 50% 32%, #8a1414 0%, #5c0a0a 100%);
-            border: 7px solid; border-image: linear-gradient(180deg,#fff6cc,#f5c542 30%,#a8720a 70%,#f5c542) 1;
-            box-shadow: 0 0 0 4px rgba(0,0,0,0.3), 0 0 45px rgba(245,197,66,0.5), inset 0 0 25px rgba(0,0,0,0.45);
-        }
-        .czk-sorteio-gold-titulo {
-            font-family: 'Arial Black', Arial, sans-serif; font-weight: 900; letter-spacing: 0.5px;
-            font-size: clamp(1.3rem, 5.2vw, 2rem); line-height: 1.08; word-break: break-word;
-            max-width: 74%; margin: 0 auto; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-            background: linear-gradient(180deg,#fff6cc 0%, #f9dd7a 20%, #f5c542 45%, #b8720a 65%, #f5c542 85%, #fff6cc 100%);
+        .czk-sorteio-stage { position: relative; width: min(92vw, 760px); margin: 0 auto; aspect-ratio: 2752 / 1536; }
+        .czk-sorteio-stage img { width: 100%; height: 100%; display: block; object-fit: contain; border-radius: 14px; user-select: none; -webkit-user-drag: none; }
+
+        .czk-sorteio-overlay { position: absolute; }
+
+        /* Caixa preta abaixo de "VENCEDOR": nome de quem foi sorteado */
+        .czk-sorteio-nome-pos { left: 39.03%; top: 45.83%; width: 22.02%; height: 7.95%; display: flex; align-items: center; justify-content: center; }
+        #sorteio-expandido-resultado-nome {
+            font-family: 'Arial Black', Arial, sans-serif; font-weight: 900; text-align: center;
+            font-size: clamp(0.6rem, 2.6vw, 1.15rem); line-height: 1.05; max-width: 100%; padding: 0 4%;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            background: linear-gradient(180deg,#fff6cc 0%,#f9dd7a 25%,#f5c542 55%,#b8720a 100%);
             -webkit-background-clip: text; background-clip: text; color: transparent;
-            text-shadow: 0 2px 0 rgba(255,255,255,0.3), 0 3px 10px rgba(0,0,0,0.6);
-        }
-        .czk-sorteio-gold-badge { background: #0c0c0c; border: 2px solid #f5c542; border-radius: 999px; padding: 7px 18px; max-width: 82%; box-shadow: 0 4px 10px rgba(0,0,0,0.4); }
-        .czk-sorteio-gold-badge span {
-            font-family: 'Arial Black', Arial, sans-serif; font-weight: 900; font-size: clamp(0.8rem, 3vw, 1rem);
-            background: linear-gradient(180deg,#fff6cc,#f5c542 50%,#b8720a);
-            -webkit-background-clip: text; background-clip: text; color: transparent;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;
         }
 
-        .czk-slot-rolo { background: linear-gradient(180deg,#f5c542,#a8720a); border: 3px solid #7a4c04; border-radius: 16px; padding: 8px 6px; min-width: 78px; box-shadow: 0 6px 16px rgba(0,0,0,0.45), inset 0 2px 6px rgba(255,255,255,0.4); }
-        .czk-slot-janela { background: #fdfaf1; border-radius: 10px; padding: 6px 4px; box-shadow: inset 0 3px 10px rgba(0,0,0,0.25); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; overflow: hidden; }
-        .czk-slot-peek { display: block; font-family: 'Arial Black', Arial, sans-serif; font-weight: 900; font-size: clamp(0.85rem, 2.8vw, 1.2rem); color: #c81e1e; opacity: 0.32; line-height: 1; }
-        .czk-slot-atual { display: block; font-family: 'Arial Black', Arial, sans-serif; font-size: clamp(1.6rem, 7vw, 2.5rem); font-weight: 900; color: #c81e1e; text-shadow: 1px 1px 0 rgba(0,0,0,0.15); line-height: 1; }
+        /* 3 janelas dos rolos: cobrem o "#--" da imagem com o número real, no mesmo lugar */
+        .czk-sorteio-reel-pos { display: flex; align-items: center; justify-content: center; }
+        .czk-sorteio-reel-patch { position: absolute; inset: 6% 5%; background: #e6dbd2; border-radius: 16%; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 2px 6px rgba(0,0,0,0.15); }
+        .czk-sorteio-reel-num { position: relative; font-family: 'Arial Black', Arial, sans-serif; font-weight: 900; color: #9c1c1c; font-size: clamp(1.1rem, 5.4vw, 2.3rem); text-shadow: 1px 1px 0 rgba(0,0,0,0.15); }
         .czk-slot-girando { animation: czkSlotGirar 0.12s linear infinite; }
         @keyframes czkSlotGirar { 0% { transform: translateY(-3px); opacity: 0.55; } 50% { transform: translateY(3px); opacity: 1; } 100% { transform: translateY(-3px); opacity: 0.55; } }
         @media (prefers-reduced-motion: reduce) { .czk-slot-girando { animation: none; } }
+
+        /* Botão "Sortear agora" já está desenhado na imagem — isto é só a área clicável, invisível */
+        .czk-sorteio-btn-pos {
+            left: 38.70%; top: 88.61%; width: 22.56%; height: 9.44%;
+            background: transparent; border: none; cursor: pointer; border-radius: 999px; padding: 0;
+        }
+        .czk-sorteio-btn-pos:disabled { cursor: not-allowed; }
+        .czk-sorteio-btn-pos:disabled::after { content: ''; position: absolute; inset: 0; background: rgba(20,10,10,0.55); border-radius: inherit; }
         @keyframes czkNeonPulse {
             0%, 100% { filter: brightness(1); transform: scale(1); }
             50% { filter: brightness(1.35); transform: scale(1.015); }
@@ -2622,7 +2621,7 @@
     </div>
 
     <!-- MODAL: MENSAGEM FINAL DE PEDIDO CANCELADO -->
-    <div id="modal-pedido-cancelado" class="fixed inset-0 z-50 bg-[#13223a]/98 hidden items-center justify-center p-4 backdrop-blur-md">
+    <div id="modal-pedido-cancelado" class="fixed inset-0 z-[80] bg-[#13223a]/98 hidden items-center justify-center p-4 backdrop-blur-md">
         <div class="glass-card rounded-2xl w-full max-w-md border border-red-700/60 overflow-hidden shadow-2xl text-center p-8">
             <i class="fas fa-ban text-red-500 text-5xl mb-4"></i>
             <h2 class="text-xl font-bold mb-2">Pedido cancelado</h2>
@@ -3048,31 +3047,39 @@
         </div>
     </div>
 
-    <!-- MODAL: SORTEIO EXPANDIDO (tela cheia, tema vermelho/dourado — pra fazer o sorteio ao vivo no Instagram/Facebook etc.) -->
+    <!-- MODAL: SORTEIO EXPANDIDO (tela cheia, usando a foto real enviada pelo cliente como fundo — pra fazer o sorteio ao vivo no Instagram/Facebook etc.) -->
     <div id="czk-modal-sorteio-expandido">
         <div id="sorteio-expandido-confetes" style="position:absolute; inset:0; pointer-events:none; overflow:hidden; z-index:5;"></div>
 
-        <!-- Sushis, moedas e raios de fundo agora vêm direto da imagem de referência (czk-sorteio-bg.jpg) -->
-
         <button onclick="fecharSorteioExpandido()" class="absolute top-5 right-5 text-white/60 hover:text-white text-3xl" style="z-index:10;"><i class="fas fa-compress"></i></button>
 
-        <div class="w-full max-w-2xl text-center" style="position:relative; z-index:2;">
-            <div class="czk-sorteio-gold-panel">
-                <p id="sorteio-expandido-nome" class="czk-sorteio-gold-titulo"></p>
-                <div class="czk-sorteio-gold-badge"><span id="sorteio-expandido-premio"></span></div>
+        <div style="position:relative; z-index:2; width:100%;">
+            <div class="czk-sorteio-legenda">
+                <p id="sorteio-expandido-nome"></p>
+                <p id="sorteio-expandido-premio"></p>
             </div>
 
-            <div class="flex items-center justify-center gap-3 md:gap-5 mt-8 mb-8">
-                <div class="czk-slot-rolo"><div class="czk-slot-janela"><span class="czk-slot-peek">4</span><span id="sorteio-slot-0" class="czk-slot-atual">#--</span><span class="czk-slot-peek">9</span></div></div>
-                <div class="czk-slot-rolo"><div class="czk-slot-janela"><span class="czk-slot-peek">6</span><span id="sorteio-slot-1" class="czk-slot-atual">#--</span><span class="czk-slot-peek">1</span></div></div>
-                <div class="czk-slot-rolo"><div class="czk-slot-janela"><span class="czk-slot-peek">2</span><span id="sorteio-slot-2" class="czk-slot-atual">#--</span><span class="czk-slot-peek">7</span></div></div>
-            </div>
+            <div class="czk-sorteio-stage">
+                <img src="czk-sorteio-bg2.jpg" alt="Sorteio">
 
-            <button id="sorteio-expandido-btn" onclick="sortearAgoraExpandido()" class="disabled:opacity-40 disabled:cursor-not-allowed px-10 py-4 rounded-full text-lg font-black" style="background:linear-gradient(180deg,#f5c542,#a8720a); color:#3a0808; text-shadow:0 1px 0 rgba(255,255,255,0.35); box-shadow:0 6px 16px rgba(0,0,0,0.45);"><i class="fas fa-dice mr-2"></i> Sortear agora</button>
+                <!-- Nome de quem foi sorteado (aparece dentro da caixa preta, só depois do sorteio) -->
+                <div id="sorteio-expandido-resultado" class="czk-sorteio-overlay czk-sorteio-nome-pos hidden">
+                    <p id="sorteio-expandido-resultado-nome"></p>
+                </div>
 
-            <div id="sorteio-expandido-resultado" class="hidden mt-8">
-                <p class="text-yellow-200/80 text-sm uppercase tracking-wide">Ganhador</p>
-                <p id="sorteio-expandido-resultado-nome" class="czk-sorteio-gold-titulo" style="font-size:clamp(1.5rem,6vw,2.3rem);"></p>
+                <!-- 3 números do sorteio, exatamente em cima dos rolos da imagem -->
+                <div class="czk-sorteio-overlay czk-sorteio-reel-pos" style="left:32.34%; top:65.43%; width:8.36%; height:10.94%;">
+                    <div class="czk-sorteio-reel-patch"><span id="sorteio-slot-0" class="czk-sorteio-reel-num">#--</span></div>
+                </div>
+                <div class="czk-sorteio-overlay czk-sorteio-reel-pos" style="left:45.27%; top:65.36%; width:8.21%; height:11.20%;">
+                    <div class="czk-sorteio-reel-patch"><span id="sorteio-slot-1" class="czk-sorteio-reel-num">#--</span></div>
+                </div>
+                <div class="czk-sorteio-overlay czk-sorteio-reel-pos" style="left:58.14%; top:65.43%; width:8.21%; height:11.07%;">
+                    <div class="czk-sorteio-reel-patch"><span id="sorteio-slot-2" class="czk-sorteio-reel-num">#--</span></div>
+                </div>
+
+                <!-- "Sortear agora" já está desenhado na imagem: isto é só a área clicável -->
+                <button id="sorteio-expandido-btn" onclick="sortearAgoraExpandido()" class="czk-sorteio-overlay czk-sorteio-btn-pos" style="left:38.70%; top:88.61%; width:22.56%; height:9.44%;" aria-label="Sortear agora"></button>
             </div>
         </div>
     </div>
@@ -6997,6 +7004,10 @@ ${esgotado ? '' : `<div class="badge-destaque-3d"><span class="fire-icon fire-3d
         function exibirMensagemPedidoCancelado(pedido) {
             const modal = document.getElementById("modal-pedido-cancelado");
             if(!modal) return;
+            // Fecha "Meus Pedidos" (se estiver aberto) antes de mostrar a confirmação,
+            // pra ela aparecer centralizada e na frente, em vez de atrás daquela tela.
+            const modalHistorico = document.getElementById("modal-historico-cliente");
+            if(modalHistorico && modalHistorico.style.display !== "none") { fecharModalHistoricoCliente(); }
             const pagoNaEntrega = (pedido.metodo || '').includes('na entrega');
             document.getElementById("texto-pedido-cancelado-msg").textContent = pagoNaEntrega
                 ? `Seu pedido ${formatarNumeroPedido(pedido)} foi cancelado com sucesso. Agradecemos a preferência.`
