@@ -1,1 +1,72 @@
 
+# Publica o site automaticamente toda vez que você der push na branch "main".
+# Gera o CSS de produção do Tailwind sozinho (nada de rodar comando na sua máquina).
+name: Build e Deploy do site
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:   # também permite clicar em "Run workflow" manualmente, se quiser
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build-e-publicar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar o código do repositório
+        uses: actions/checkout@v4
+
+      - name: Preparar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Instalar o Tailwind CSS (CLI)
+        run: npm install -D tailwindcss@3
+
+      - name: Configurar o Tailwind para escanear todos os .html do repositório
+        run: |
+          cat > tailwind.config.js << 'EOF'
+          module.exports = {
+            content: ["./**/*.html"],
+            theme: { extend: {} },
+            plugins: [],
+          }
+          EOF
+          cat > tw-input.css << 'EOF'
+          @tailwind base;
+          @tailwind components;
+          @tailwind utilities;
+          EOF
+
+      - name: Gerar o CSS de produção (só com as classes realmente usadas)
+        run: npx tailwindcss -i tw-input.css -o tailwind-prod.css --minify
+
+      - name: Trocar o Tailwind CDN pelo CSS já compilado, em todos os .html
+        run: |
+          find . -name "*.html" -not -path "./node_modules/*" -print0 | while IFS= read -r -d '' arquivo; do
+            sed -i 's#<script src="https://cdn.tailwindcss.com"></script>#<link rel="stylesheet" href="/tailwind-prod.css">#g' "$arquivo"
+          done
+
+      - name: Montar a pasta final que vai pro ar
+        run: |
+          mkdir -p dist
+          # copia tudo do repositório, menos as coisas internas do processo de build
+          rsync -a --exclude 'dist' --exclude 'node_modules' --exclude '.github' --exclude 'tailwind.config.js' --exclude 'tw-input.css' --exclude 'package.json' --exclude 'package-lock.json' ./ dist/
+
+      - name: Preparar artefato do GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      - name: Publicar no GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
