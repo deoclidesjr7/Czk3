@@ -5,10 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>CZK MAKI</title>
 
-    <!-- ===================== Prévia de link (WhatsApp, redes sociais, etc.) =====================
-         Sem essas tags, apps como o WhatsApp só conseguem mostrar o <title> em texto puro, sem
-         nenhuma imagem — foi exatamente o que aconteceu antes. Com og:image apontando pra logo,
-         a prévia passa a mostrar a logo ANTES do nome/descrição, como um cartão. =============== -->
+    <!-- ===================== Prévia de link (WhatsApp, redes sociais, etc.) ===================== -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://czkmaki.com.br/">
     <meta property="og:title" content="CZK MAKI">
@@ -19,25 +16,11 @@
     <meta name="twitter:description" content="Peça já pelo cardápio digital do CZK MAKI 🍣">
     <meta name="twitter:image" content="https://czkmaki.com.br/og-image.png">
 
-    <!-- CORREÇÃO DE "FLASH": a classe "hidden" só existe de verdade depois que o script do
-         Tailwind (carregado via CDN, mais abaixo) termina de processar a página. Enquanto isso
-         não acontece, qualquer modal/painel em tela cheia (Área Restrita, painéis de admin,
-         garçom, cozinha, etc.) fica visível por uma fração de segundo, sobreposto ao app —
-         é esse "pisca" que aparecia toda vez que a página carregava/recarregava.
-         Esta regra usa CSS puro (não depende do Tailwind) pra já esconder essas telas desde o
-         primeiro instante. Como não tem "!important", o JS continua controlando normalmente
-         quando UMA delas precisa aparecer (style.display = "flex"/"block" sempre tem prioridade
-         sobre isto aqui). -->
-    <style>
-        [class*="fixed"][class*="inset-0"][class*="hidden"] { display: none; }
-    </style>
-
     <!-- ===================== PWA (app instalável) ===================== -->
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#101a2c">
     <meta name="background-color" content="#101a2c">
     <meta name="mobile-web-app-capable" content="yes">
-    <!-- iOS/Safari: ativa o modo "tela cheia" quando instalado na tela de início -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="CZK MAKI">
@@ -46,19 +29,183 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
     <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png">
-    <!-- =================================================================== -->
 
-    <!-- ACELERADOR: abre a conexão (DNS+TLS) com os CDNs externos em paralelo, antes mesmo de
-         o navegador "descobrir" que vai precisar deles ao ler as tags abaixo. Não muda nada
-         visualmente, só ganha tempo de rede de graça. -->
+    <!-- ===================== OTIMIZAÇÃO: Preconnect + DNS-Prefetch ===================== -->
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="dns-prefetch" href="https://images.unsplash.com">
+
+    <!-- ===================== OTIMIZAÇÃO: Apenas 2 fontes (em vez de 8) ===================== -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- ===================== Tailwind CSS (pré-compilado) =====================
+         IMPORTANTE: Substitua o URL abaixo pelo seu arquivo tailwind.min.css
+         Se ainda não tiver, use o CDN por enquanto e optimize depois -->
+    <!-- VERSÃO 1: Usando CDN (temporário) -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700;14..32,800&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Poppins:wght@400;500;600;700;800&family=Montserrat:wght@400;500;600;700;800&family=Quicksand:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700;800&family=Oswald:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-    <!-- Leaflet (mapa) e Chart.js (gráficos) NÃO são mais carregados aqui no <head>.
+    
+    <!-- VERSÃO 2: Usando arquivo local (após compilar) - DESCOMENTE quando tiver o arquivo
+    <link rel="stylesheet" href="/css/tailwind.min.css">
+    -->
+
+    <!-- ===================== FontAwesome (carregado sob demanda) ===================== -->
+    <!-- FontAwesome será carregado apenas em páginas que precisem (admin, entregador, etc) -->
+    <!-- Se precisar de ícones IMEDIATO na página inicial, descomente a linha abaixo -->
+    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"> -->
+
+    <!-- ===================== CSS CUSTOMIZADO (separado) ===================== -->
+    <style>
+        [class*="fixed"][class*="inset-0"][class*="hidden"] { display: none; }
+
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; background: #101a2c; }
+        h1, h2, h3 { font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; }
+
+        html, body {
+            overscroll-behavior: none;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        input, textarea, select, [contenteditable="true"] {
+            -webkit-user-select: text;
+            user-select: text;
+        }
+        ::-webkit-scrollbar { width: 0; height: 0; display: none; }
+        * { scrollbar-width: none; }
+
+        .hero-bg { display: block; position: fixed; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; }
+        .bg-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; background: #f3e8ca; }
+
+        #cliente-nome-header {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            line-height: 1.15;
+            max-width: 110px;
+        }
+        #cliente-nome-header .cliente-nome-header-saudacao {
+            font-size: 9px;
+            opacity: 0.75;
+        }
+        #cliente-nome-header .cliente-nome-header-nome {
+            font-size: 12px;
+            font-weight: 600;
+            max-width: 110px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        #app-shell { position: relative; width: 100%; min-height: 100vh; margin: 0 auto; }
+
+        @media (min-width: 992px) {
+            html, body { background: #0b1220; }
+            #app-shell {
+                max-width: 100%;
+                min-height: 100vh;
+                contain: layout;
+                transition: max-width 0.15s ease;
+            }
+            #app-shell.app-shell-expandido {
+                max-width: 100%;
+                width: 100%;
+                box-shadow: none;
+            }
+            #cliente-nome-header {
+                flex-direction: row;
+                align-items: center;
+                gap: 4px;
+                max-width: none;
+            }
+            #cliente-nome-header .cliente-nome-header-nome {
+                max-width: none;
+                overflow: visible;
+                text-overflow: clip;
+                white-space: nowrap;
+            }
+            #screen-login .glass-card {
+                transform: scale(0.75);
+                transform-origin: center;
+            }
+        }
+
+        .czk-bloqueado-plano { opacity: 0.35; filter: grayscale(1); cursor: not-allowed !important; position: relative; }
+        .czk-em-breve { opacity: 0.4; filter: grayscale(1); cursor: not-allowed !important; }
+        #btn-estoque-relatorio-texto:hover, #btn-relatorio-texto:hover { background:#1EBE57 !important; }
+        .czk-cadeado-plano { position: absolute; top: 6px; right: 8px; font-size: 12px; color: #facc15; }
+
+        #cozinha-panel { color: #e8edf5; font-family: 'Inter', system-ui, sans-serif; }
+        .cozinha-coluna { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 12px; }
+        .cozinha-ticket { background: #16233d; border: 1px solid rgba(255,255,255,0.1); border-left: 5px solid rgba(255,255,255,0.2); border-radius: 12px; padding: 12px 14px; }
+        .cozinha-ticket.tempo-ok { border-left-color: #22c55e; }
+        .cozinha-ticket.tempo-atencao { border-left-color: #eab308; }
+        .cozinha-ticket.tempo-atrasado { border-left-color: #ef4444; animation: cozinhaPulsar 1.3s ease-in-out infinite; }
+        .cozinha-ticket.tempo-atrasado.atraso-medio { animation-duration: 0.8s; }
+        .cozinha-ticket.tempo-atrasado.atraso-critico { animation-duration: 0.45s; }
+        @keyframes cozinhaPulsar {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.45), 0 0 10px 2px rgba(239,68,68,0.25); }
+            50% { box-shadow: 0 0 0 8px rgba(239,68,68,0), 0 0 24px 6px rgba(239,68,68,0.6); }
+        }
+        .cozinha-ticket .cozinha-itens { font-size: 0.95rem; line-height: 1.35; }
+        .cozinha-cronometro { font-family: 'Share Tech Mono', 'Courier New', monospace; font-size: 1.15rem; font-weight: 700; letter-spacing: 0.5px; line-height: 1; }
+        .cozinha-cronometro.tempo-ok { color: #4ade80; }
+        .cozinha-cronometro.tempo-atencao { color: #facc15; }
+        .cozinha-cronometro.tempo-atrasado { color: #f87171; font-weight: 800; font-size: 1.25rem; text-shadow: 0 0 8px rgba(248,113,113,0.85), 0 0 2px rgba(248,113,113,0.9); }
+
+        .glass-card { background: rgba(255, 253, 246, 0.97); backdrop-filter: blur(10px); border: 1px solid rgba(16, 26, 44, 0.12); box-shadow: 0 20px 45px -18px rgba(16,26,44,0.35); color: #16233d; }
+        .glass-card-solid { background: rgba(255, 253, 246, 0.97); backdrop-filter: blur(12px); border: 1px solid rgba(16,26,44,0.14); box-shadow: 0 20px 45px -18px rgba(16,26,44,0.3); }
+        #screen-login .glass-card, #screen-auth .glass-card { background: rgba(255, 253, 246, 0.92); backdrop-filter: blur(14px); }
+        #admin-panel, #entregador-panel { background-color: #f3e8ca !important; }
+
+        .czk-dropdown-item { transition: background 0.15s ease; }
+        .czk-dropdown-item:hover { background: rgba(22,35,61,0.06); }
+
+        /* Cores de texto (simplificado) */
+        #screen-login, #screen-auth, #app-cliente, #modal-carrinho, #modal-historico-cliente, #modal-confirmar-pedido, #modal-config-conta, #modal-enderecos, #modal-novo-endereco, #modal-detalhe-produto, #modal-suporte-cliente, #modal-chat-suporte, #modal-mapa-entrega, #modal-pedido-enviado, #admin-panel, #entregador-panel, #modal-proprietario, #modal-entregador, #modal-desenvolvedor, #czk-modal-alert, #czk-modal-confirm, #czk-modal-cupom-cliente, #czk-modal-impressora, #czk-modal-motivo-suporte, #czk-modal-prompt, #czk-modal-recibo-entregador, #modal-cozinha, #modal-enviar-cupom, #modal-garcom, #modal-mesas-login, #modal-oferta-combo, #modal-ofertas-desconto, #modal-pedido-cancelado, #modal-pin-quiosque, #modal-pin-sair-mesa {
+            color: #16233d;
+        }
+
+        #app-cliente.modo-mesa-ativo #menu-cliente-dropdown button:nth-child(1),
+        #app-cliente.modo-mesa-ativo #menu-cliente-dropdown button:nth-child(2),
+        #app-cliente.modo-mesa-ativo #menu-cliente-dropdown button:nth-child(4) {
+            display: none !important;
+        }
+
+        #app-cliente.modo-mesa-ativo .voltar-mesa-discreto {
+            opacity: 0;
+        }
+        #app-cliente.modo-mesa-ativo.garcom-ativo .voltar-mesa-discreto {
+            opacity: 1;
+            background: #4338ca;
+            border: 1px solid #a5b4fc;
+            border-radius: 9999px;
+            padding: 3px 7.5px 3px 6px !important;
+            margin: 8px 0 0 12px;
+            gap: 4.5px !important;
+            box-shadow: 0 2px 10px rgba(67,56,202,0.55);
+        }
+        #app-cliente.modo-mesa-ativo.garcom-ativo .voltar-mesa-discreto i,
+        #app-cliente.modo-mesa-ativo.garcom-ativo .voltar-mesa-discreto span {
+            color: #ffffff !important;
+            font-size: 8.25px !important;
+            font-weight: 700;
+        }
+
+        #screen-login [class*="text-blue-400"], #screen-auth [class*="text-blue-400"], #app-cliente [class*="text-blue-400"],
+        #modal-carrinho [class*="text-blue-400"], #modal-historico-cliente [class*="text-blue-400"], #modal-config-conta [class*="text-blue-400"],
+        #modal-confirmar-pedido [class*="text-blue-400"], #modal-suporte-cliente [class*="text-blue-400"],
+        #modal-enderecos [class*="text-blue-400"], #modal-novo-endereco [class*="text-blue-400"], #modal-detalhe-produto [class*="text-blue-400"],
+        #modal-proprietario [class*="text-blue-400"],
+        #admin-panel [class*="text-blue-400"], #entregador-panel [class*="text-blue-400"] { color: #1d4ed8 !important; }
+    </style>
+
+    <!-- ===================== Script de Lazy-Load (Mercado Pago, FontAwesome, etc) ===================== -->
+    <script src="/js/lazy-load-mercadopago.js"></script>
+
+</head>.
          São bibliotecas usadas só dentro do painel Admin/Entregador (mapa de rastreamento e aba de Relatórios),
          então agora são carregadas sob demanda (ver czkCarregarLeaflet/czkCarregarChart no script principal),
          economizando ~200-300KB no carregamento inicial pro cliente comum, que nunca usa essas telas. -->
