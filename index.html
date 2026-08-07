@@ -5,7 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>CZK MAKI</title>
 
-    <!-- ===================== Prévia de link (WhatsApp, redes sociais, etc.) ===================== -->
+    <!-- ===================== Prévia de link (WhatsApp, redes sociais, etc.) =====================
+         Sem essas tags, apps como o WhatsApp só conseguem mostrar o <title> em texto puro, sem
+         nenhuma imagem — foi exatamente o que aconteceu antes. Com og:image apontando pra logo,
+         a prévia passa a mostrar a logo ANTES do nome/descrição, como um cartão. =============== -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://czkmaki.com.br/">
     <meta property="og:title" content="CZK MAKI">
@@ -16,11 +19,25 @@
     <meta name="twitter:description" content="Peça já pelo cardápio digital do CZK MAKI 🍣">
     <meta name="twitter:image" content="https://czkmaki.com.br/og-image.png">
 
+    <!-- CORREÇÃO DE "FLASH": a classe "hidden" só existe de verdade depois que o script do
+         Tailwind (carregado via CDN, mais abaixo) termina de processar a página. Enquanto isso
+         não acontece, qualquer modal/painel em tela cheia (Área Restrita, painéis de admin,
+         garçom, cozinha, etc.) fica visível por uma fração de segundo, sobreposto ao app —
+         é esse "pisca" que aparecia toda vez que a página carregava/recarregava.
+         Esta regra usa CSS puro (não depende do Tailwind) pra já esconder essas telas desde o
+         primeiro instante. Como não tem "!important", o JS continua controlando normalmente
+         quando UMA delas precisa aparecer (style.display = "flex"/"block" sempre tem prioridade
+         sobre isto aqui). -->
+    <style>
+        [class*="fixed"][class*="inset-0"][class*="hidden"] { display: none; }
+    </style>
+
     <!-- ===================== PWA (app instalável) ===================== -->
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#101a2c">
     <meta name="background-color" content="#101a2c">
     <meta name="mobile-web-app-capable" content="yes">
+    <!-- iOS/Safari: ativa o modo "tela cheia" quando instalado na tela de início -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="CZK MAKI">
@@ -29,183 +46,25 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
     <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png">
+    <!-- =================================================================== -->
 
-    <!-- ===================== OTIMIZAÇÃO: Preconnect + DNS-Prefetch ===================== -->
+    <!-- ACELERADOR: abre a conexão (DNS+TLS) com os CDNs externos em paralelo, antes mesmo de
+         o navegador "descobrir" que vai precisar deles ao ler as tags abaixo. Não muda nada
+         visualmente, só ganha tempo de rede de graça. -->
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="dns-prefetch" href="https://images.unsplash.com">
-
-    <!-- ===================== OTIMIZAÇÃO: Apenas 2 fontes (em vez de 8) ===================== -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
-
-    <!-- ===================== Tailwind CSS (pré-compilado) =====================
-         IMPORTANTE: Substitua o URL abaixo pelo seu arquivo tailwind.min.css
-         Se ainda não tiver, use o CDN por enquanto e optimize depois -->
-    <!-- VERSÃO 1: Usando CDN (temporário) -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- VERSÃO 2: Usando arquivo local (após compilar) - DESCOMENTE quando tiver o arquivo
-    <link rel="stylesheet" href="/css/tailwind.min.css">
-    -->
-
-    <!-- ===================== FontAwesome (carregado sob demanda) ===================== -->
-    <!-- FontAwesome será carregado apenas em páginas que precisem (admin, entregador, etc) -->
-    <!-- Se precisar de ícones IMEDIATO na página inicial, descomente a linha abaixo -->
-    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"> -->
-
-    <!-- ===================== CSS CUSTOMIZADO (separado) ===================== -->
-    <style>
-        [class*="fixed"][class*="inset-0"][class*="hidden"] { display: none; }
-
-        * { box-sizing: border-box; }
-        body { font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; background: #101a2c; }
-        h1, h2, h3 { font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; }
-
-        html, body {
-            overscroll-behavior: none;
-            -webkit-user-select: none;
-            user-select: none;
-            -webkit-touch-callout: none;
-            -webkit-tap-highlight-color: transparent;
-        }
-        input, textarea, select, [contenteditable="true"] {
-            -webkit-user-select: text;
-            user-select: text;
-        }
-        ::-webkit-scrollbar { width: 0; height: 0; display: none; }
-        * { scrollbar-width: none; }
-
-        .hero-bg { display: block; position: fixed; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; }
-        .bg-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; background: #f3e8ca; }
-
-        #cliente-nome-header {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            line-height: 1.15;
-            max-width: 110px;
-        }
-        #cliente-nome-header .cliente-nome-header-saudacao {
-            font-size: 9px;
-            opacity: 0.75;
-        }
-        #cliente-nome-header .cliente-nome-header-nome {
-            font-size: 12px;
-            font-weight: 600;
-            max-width: 110px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        #app-shell { position: relative; width: 100%; min-height: 100vh; margin: 0 auto; }
-
-        @media (min-width: 992px) {
-            html, body { background: #0b1220; }
-            #app-shell {
-                max-width: 100%;
-                min-height: 100vh;
-                contain: layout;
-                transition: max-width 0.15s ease;
-            }
-            #app-shell.app-shell-expandido {
-                max-width: 100%;
-                width: 100%;
-                box-shadow: none;
-            }
-            #cliente-nome-header {
-                flex-direction: row;
-                align-items: center;
-                gap: 4px;
-                max-width: none;
-            }
-            #cliente-nome-header .cliente-nome-header-nome {
-                max-width: none;
-                overflow: visible;
-                text-overflow: clip;
-                white-space: nowrap;
-            }
-            #screen-login .glass-card {
-                transform: scale(0.75);
-                transform-origin: center;
-            }
-        }
-
-        .czk-bloqueado-plano { opacity: 0.35; filter: grayscale(1); cursor: not-allowed !important; position: relative; }
-        .czk-em-breve { opacity: 0.4; filter: grayscale(1); cursor: not-allowed !important; }
-        #btn-estoque-relatorio-texto:hover, #btn-relatorio-texto:hover { background:#1EBE57 !important; }
-        .czk-cadeado-plano { position: absolute; top: 6px; right: 8px; font-size: 12px; color: #facc15; }
-
-        #cozinha-panel { color: #e8edf5; font-family: 'Inter', system-ui, sans-serif; }
-        .cozinha-coluna { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 12px; }
-        .cozinha-ticket { background: #16233d; border: 1px solid rgba(255,255,255,0.1); border-left: 5px solid rgba(255,255,255,0.2); border-radius: 12px; padding: 12px 14px; }
-        .cozinha-ticket.tempo-ok { border-left-color: #22c55e; }
-        .cozinha-ticket.tempo-atencao { border-left-color: #eab308; }
-        .cozinha-ticket.tempo-atrasado { border-left-color: #ef4444; animation: cozinhaPulsar 1.3s ease-in-out infinite; }
-        .cozinha-ticket.tempo-atrasado.atraso-medio { animation-duration: 0.8s; }
-        .cozinha-ticket.tempo-atrasado.atraso-critico { animation-duration: 0.45s; }
-        @keyframes cozinhaPulsar {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.45), 0 0 10px 2px rgba(239,68,68,0.25); }
-            50% { box-shadow: 0 0 0 8px rgba(239,68,68,0), 0 0 24px 6px rgba(239,68,68,0.6); }
-        }
-        .cozinha-ticket .cozinha-itens { font-size: 0.95rem; line-height: 1.35; }
-        .cozinha-cronometro { font-family: 'Share Tech Mono', 'Courier New', monospace; font-size: 1.15rem; font-weight: 700; letter-spacing: 0.5px; line-height: 1; }
-        .cozinha-cronometro.tempo-ok { color: #4ade80; }
-        .cozinha-cronometro.tempo-atencao { color: #facc15; }
-        .cozinha-cronometro.tempo-atrasado { color: #f87171; font-weight: 800; font-size: 1.25rem; text-shadow: 0 0 8px rgba(248,113,113,0.85), 0 0 2px rgba(248,113,113,0.9); }
-
-        .glass-card { background: rgba(255, 253, 246, 0.97); backdrop-filter: blur(10px); border: 1px solid rgba(16, 26, 44, 0.12); box-shadow: 0 20px 45px -18px rgba(16,26,44,0.35); color: #16233d; }
-        .glass-card-solid { background: rgba(255, 253, 246, 0.97); backdrop-filter: blur(12px); border: 1px solid rgba(16,26,44,0.14); box-shadow: 0 20px 45px -18px rgba(16,26,44,0.3); }
-        #screen-login .glass-card, #screen-auth .glass-card { background: rgba(255, 253, 246, 0.92); backdrop-filter: blur(14px); }
-        #admin-panel, #entregador-panel { background-color: #f3e8ca !important; }
-
-        .czk-dropdown-item { transition: background 0.15s ease; }
-        .czk-dropdown-item:hover { background: rgba(22,35,61,0.06); }
-
-        /* Cores de texto (simplificado) */
-        #screen-login, #screen-auth, #app-cliente, #modal-carrinho, #modal-historico-cliente, #modal-confirmar-pedido, #modal-config-conta, #modal-enderecos, #modal-novo-endereco, #modal-detalhe-produto, #modal-suporte-cliente, #modal-chat-suporte, #modal-mapa-entrega, #modal-pedido-enviado, #admin-panel, #entregador-panel, #modal-proprietario, #modal-entregador, #modal-desenvolvedor, #czk-modal-alert, #czk-modal-confirm, #czk-modal-cupom-cliente, #czk-modal-impressora, #czk-modal-motivo-suporte, #czk-modal-prompt, #czk-modal-recibo-entregador, #modal-cozinha, #modal-enviar-cupom, #modal-garcom, #modal-mesas-login, #modal-oferta-combo, #modal-ofertas-desconto, #modal-pedido-cancelado, #modal-pin-quiosque, #modal-pin-sair-mesa {
-            color: #16233d;
-        }
-
-        #app-cliente.modo-mesa-ativo #menu-cliente-dropdown button:nth-child(1),
-        #app-cliente.modo-mesa-ativo #menu-cliente-dropdown button:nth-child(2),
-        #app-cliente.modo-mesa-ativo #menu-cliente-dropdown button:nth-child(4) {
-            display: none !important;
-        }
-
-        #app-cliente.modo-mesa-ativo .voltar-mesa-discreto {
-            opacity: 0;
-        }
-        #app-cliente.modo-mesa-ativo.garcom-ativo .voltar-mesa-discreto {
-            opacity: 1;
-            background: #4338ca;
-            border: 1px solid #a5b4fc;
-            border-radius: 9999px;
-            padding: 3px 7.5px 3px 6px !important;
-            margin: 8px 0 0 12px;
-            gap: 4.5px !important;
-            box-shadow: 0 2px 10px rgba(67,56,202,0.55);
-        }
-        #app-cliente.modo-mesa-ativo.garcom-ativo .voltar-mesa-discreto i,
-        #app-cliente.modo-mesa-ativo.garcom-ativo .voltar-mesa-discreto span {
-            color: #ffffff !important;
-            font-size: 8.25px !important;
-            font-weight: 700;
-        }
-
-        #screen-login [class*="text-blue-400"], #screen-auth [class*="text-blue-400"], #app-cliente [class*="text-blue-400"],
-        #modal-carrinho [class*="text-blue-400"], #modal-historico-cliente [class*="text-blue-400"], #modal-config-conta [class*="text-blue-400"],
-        #modal-confirmar-pedido [class*="text-blue-400"], #modal-suporte-cliente [class*="text-blue-400"],
-        #modal-enderecos [class*="text-blue-400"], #modal-novo-endereco [class*="text-blue-400"], #modal-detalhe-produto [class*="text-blue-400"],
-        #modal-proprietario [class*="text-blue-400"],
-        #admin-panel [class*="text-blue-400"], #entregador-panel [class*="text-blue-400"] { color: #1d4ed8 !important; }
-    </style>
-
-    <!-- ===================== Script de Lazy-Load (Mercado Pago, FontAwesome, etc) ===================== -->
-    <script src="/js/lazy-load-mercadopago.js"></script>
-
-</head>.
+    <!-- OTIMIZAÇÃO SEGURA: o FontAwesome (ícones usados em TODAS as telas — cliente, admin, etc.)
+         carrega em paralelo, sem travar a primeira renderização da página (truque do
+         media="print" + onload). Continua aparecendo em qualquer tela, igual antes —
+         só não bloqueia mais o carregamento inicial. Se o navegador não tiver JS,
+         o <noscript> abaixo garante que os ícones carreguem do mesmo jeito. -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700;14..32,800&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Poppins:wght@400;500;600;700;800&family=Montserrat:wght@400;500;600;700;800&family=Quicksand:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700;800&family=Oswald:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <!-- Leaflet (mapa) e Chart.js (gráficos) NÃO são mais carregados aqui no <head>.
          São bibliotecas usadas só dentro do painel Admin/Entregador (mapa de rastreamento e aba de Relatórios),
          então agora são carregadas sob demanda (ver czkCarregarLeaflet/czkCarregarChart no script principal),
          economizando ~200-300KB no carregamento inicial pro cliente comum, que nunca usa essas telas. -->
@@ -3753,6 +3612,23 @@
             return Promise.race([upsertPromise, timeoutPromise]);
         }
 
+        // =========================================================================
+        //  UPLOAD DE ARQUIVO GRANDE (Supabase Storage) — usado pro vídeo/imagem da
+        //  notificação promocional, em vez de guardar o arquivo inteiro em base64
+        //  dentro do czk_data (que travava a sincronização de arquivos grandes).
+        //  Requer um bucket PÚBLICO chamado "czk-midia" já criado no painel do Supabase.
+        // =========================================================================
+        const CZK_STORAGE_BUCKET = "czk-midia";
+        async function czkUploadArquivoStorage(file, prefixo) {
+            const nomeArquivo = `${prefixo}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_')}`;
+            const { error: erroUpload } = await czkSupabase.storage
+                .from(CZK_STORAGE_BUCKET)
+                .upload(nomeArquivo, file, { upsert: true, cacheControl: '3600' });
+            if(erroUpload) throw erroUpload;
+            const { data } = czkSupabase.storage.from(CZK_STORAGE_BUCKET).getPublicUrl(nomeArquivo);
+            return data.publicUrl;
+        }
+
         // Lê uma chave: prioriza o que já veio do Supabase; se não tiver (offline), cai pro localStorage.
         function czkGet(key) {
             if(czkRemoteData && Object.prototype.hasOwnProperty.call(czkRemoteData, key)) {
@@ -3868,7 +3744,15 @@
                     // é o gatilho do alerta sonoro/visual pro garçom saber que pode ir buscar/servir.
                     const novosProntosMesa = pedidosRecebidos.filter(p => p.tipoEntrega === 'mesa' && p.status === 'Pedido finalizado' && !p.servidoEm && statusAntigosMesa.get(p.id) !== 'Pedido finalizado');
                     historicoPedidos = pedidosRecebidos;
-                    renderHistorico(); renderPedidosAtivos(); renderPedidosDisponiveis(); renderMinhasEntregas(); renderControleEntregas(); renderCancelamentosAdmin(); renderPedidosFinalizadosAdmin(); renderPedidosRetiradaAdmin(); renderBalcaoAdmin(); renderCozinhaPainel();
+                    // BLOQUEADOR: essas atualizações só servem pra quem está de fato dentro do
+                    // Admin/Entregador/Cozinha. Um cliente comum olhando o cardápio nunca vê essas
+                    // telas — então não faz sentido reprocessar tudo isso no aparelho dele toda vez
+                    // que um pedido muda em qualquer lugar do restaurante. Continua funcionando
+                    // exatamente igual pra quem está logado (inclusive com várias abas/telas
+                    // abertas ao mesmo tempo — cada uma decide sozinha se precisa atualizar).
+                    if(adminLogado) { renderHistorico(); renderPedidosAtivos(); renderControleEntregas(); renderCancelamentosAdmin(); renderPedidosFinalizadosAdmin(); renderPedidosRetiradaAdmin(); renderBalcaoAdmin(); }
+                    if(entregadorLogado) { renderPedidosDisponiveis(); renderMinhasEntregas(); }
+                    if(cozinhaLogada) { renderCozinhaPainel(); }
                     if(clienteAtual) atualizarHistoricoCliente();
                     if(document.getElementById("modal-suporte-cliente")?.style.display === "flex") renderListaSuporteCliente();
                     if(garcomLogado) {
@@ -10363,8 +10247,9 @@ ${esgotado ? '' : `<div class="badge-destaque-3d"><span class="fire-icon fire-3d
             atualizarPreviewPromo();
         }
 
-        // Lê a imagem escolhida no aparelho do lojista e guarda em base64 até o Salvar
-        function carregarImagemPromoEmoji(event) {
+        // Lê a imagem escolhida no aparelho do lojista e ENVIA PRA NUVEM (Supabase Storage) —
+        // guarda só o link público até o Salvar, em vez do arquivo inteiro em base64.
+        async function carregarImagemPromoEmoji(event) {
             const file = event.target.files && event.target.files[0];
             const statusEl = document.getElementById("promo-emoji-imagem-status");
             if(!file) { if(statusEl) statusEl.innerText = "Nenhuma imagem enviada ainda."; return; }
@@ -10373,19 +10258,18 @@ ${esgotado ? '' : `<div class="badge-destaque-3d"><span class="fire-icon fire-3d
                 event.target.value = "";
                 return;
             }
-            if(statusEl) { statusEl.innerText = "⏳ Carregando imagem..."; statusEl.classList.remove("text-red-400"); }
-            const reader = new FileReader();
-            reader.onerror = () => {
-                if(statusEl) { statusEl.innerText = "❌ Não foi possível ler essa imagem. Tente outro arquivo."; statusEl.classList.add("text-red-400"); }
-                alert("Não foi possível ler essa imagem no aparelho. Tente novamente ou tente outro arquivo.");
-                event.target.value = "";
-            };
-            reader.onload = e => {
-                promoNotifImagemTemp = e.target.result;
-                if(statusEl) { statusEl.innerText = "✓ " + file.name + " carregada. Veja a prévia ao lado."; statusEl.classList.remove("text-red-400"); }
+            if(statusEl) { statusEl.innerText = "⏳ Enviando imagem pra nuvem..."; statusEl.classList.remove("text-red-400"); }
+            try {
+                const urlPublica = await czkUploadArquivoStorage(file, "promo-imagem");
+                promoNotifImagemTemp = urlPublica;
+                if(statusEl) { statusEl.innerText = "✓ " + file.name + " enviada pra nuvem. Veja a prévia ao lado."; statusEl.classList.remove("text-red-400"); }
                 atualizarPreviewPromo();
-            };
-            reader.readAsDataURL(file);
+            } catch(erroUpload) {
+                console.error("[carregarImagemPromoEmoji] erro no upload:", erroUpload);
+                if(statusEl) { statusEl.innerText = "❌ Não foi possível enviar essa imagem pra nuvem. Tente novamente."; statusEl.classList.add("text-red-400"); }
+                alert("Não foi possível enviar essa imagem pra nuvem. Verifique sua internet e tente de novo. (Se o erro persistir, confirme que o bucket \"czk-midia\" existe e está marcado como Público no Supabase.)");
+                event.target.value = "";
+            }
         }
 
         // Alterna entre notificação tipo "cartão" (texto/emoji) ou "vídeo" (tela cheia) na tela de login
@@ -10400,8 +10284,10 @@ ${esgotado ? '' : `<div class="badge-destaque-3d"><span class="fire-icon fire-3d
         }
         let promoNotifTipoNotifAtual = "cartao";
 
-        // Lê o vídeo escolhido no aparelho do lojista e guarda em base64 até o Salvar
-        function carregarVideoPromoArquivo(event) {
+        // Lê o vídeo escolhido no aparelho do lojista e ENVIA PRA NUVEM (Supabase Storage) —
+        // guarda só o link público até o Salvar, em vez do arquivo inteiro em base64 (que era
+        // o motivo de vídeos grandes não sincronizarem pros clientes/outros aparelhos).
+        async function carregarVideoPromoArquivo(event) {
             const file = event.target.files && event.target.files[0];
             const statusEl = document.getElementById("promo-video-status");
             if(!file) { if(statusEl) statusEl.innerText = "Nenhum vídeo enviado ainda."; return; }
@@ -10411,32 +10297,29 @@ ${esgotado ? '' : `<div class="badge-destaque-3d"><span class="fire-icon fire-3d
                 if(statusEl) statusEl.innerText = "Nenhum vídeo enviado ainda.";
                 return;
             }
-            // AVISO DE TAMANHO: vídeos grandes viram um texto base64 gigante (cerca de 33% maior
-            // que o arquivo original) que trava a leitura no celular e, mesmo quando lê, muitas
-            // vezes estoura o limite de tamanho que o banco de dados aceita por registro — fazendo
-            // o vídeo "sumir" ao salvar, sem nenhum aviso. Por isso, ao invés de deixar tentar e
-            // travar/falhar em silêncio, avisamos ANTES e sugerimos o link hospedado.
+            // Agora o vídeo vai direto pro Storage (não vira mais um texto base64 gigante dentro
+            // da configuração), então o limite pode ser bem mais folgado — 100MB cobre qualquer
+            // vídeo promocional razoável e ainda evita anexo enorme por engano.
             const tamanhoMB = file.size / (1024 * 1024);
-            if(tamanhoMB > 25) {
+            if(tamanhoMB > 100) {
                 if(statusEl) { statusEl.innerText = "❌ Vídeo muito grande (" + tamanhoMB.toFixed(1) + " MB)."; statusEl.classList.add("text-red-400"); }
-                alert("Esse vídeo tem " + tamanhoMB.toFixed(1) + " MB — é grande demais pra enviar direto do aparelho (o navegador pode travar ou o envio pode falhar em silêncio). Hospede o vídeo em algum lugar (ex: um link do Google Drive, YouTube não-listado, ou outro serviço de vídeo) e cole o link no campo abaixo, em \"— ou — cole o link de um vídeo hospedado\".");
+                alert("Esse vídeo tem " + tamanhoMB.toFixed(1) + " MB — tente um vídeo mais curto/leve (até 100 MB), ou cole o link de um vídeo já hospedado.");
                 event.target.value = "";
                 return;
             }
-            if(statusEl) { statusEl.innerText = "⏳ Carregando vídeo (" + tamanhoMB.toFixed(1) + " MB)... aguarde, pode levar alguns segundos."; statusEl.classList.remove("text-red-400"); }
-            const reader = new FileReader();
-            reader.onerror = () => {
-                if(statusEl) { statusEl.innerText = "❌ Não foi possível ler esse vídeo. Tente outro arquivo ou use o link hospedado."; statusEl.classList.add("text-red-400"); }
-                alert("Não foi possível ler esse vídeo no aparelho. Tente novamente, tente outro arquivo, ou cole o link de um vídeo já hospedado.");
-                event.target.value = "";
-            };
-            reader.onload = e => {
-                promoNotifVideoTemp = e.target.result;
+            if(statusEl) { statusEl.innerText = "⏳ Enviando vídeo (" + tamanhoMB.toFixed(1) + " MB) pra nuvem... aguarde, pode levar alguns segundos." ; statusEl.classList.remove("text-red-400"); }
+            try {
+                const urlPublica = await czkUploadArquivoStorage(file, "promo-video");
+                promoNotifVideoTemp = urlPublica;
                 document.getElementById("promo-video-url").value = "";
-                if(statusEl) { statusEl.innerText = "✓ " + file.name + " (" + tamanhoMB.toFixed(1) + " MB) carregado. Clique em \"Salvar Notificação\" pra confirmar."; statusEl.classList.remove("text-red-400"); }
+                if(statusEl) { statusEl.innerText = "✓ " + file.name + " (" + tamanhoMB.toFixed(1) + " MB) enviado pra nuvem. Clique em \"Salvar Notificação\" pra confirmar."; statusEl.classList.remove("text-red-400"); }
                 atualizarPreviewVideoPromo();
-            };
-            reader.readAsDataURL(file);
+            } catch(erroUpload) {
+                console.error("[carregarVideoPromoArquivo] erro no upload:", erroUpload);
+                if(statusEl) { statusEl.innerText = "❌ Não foi possível enviar esse vídeo pra nuvem. Tente novamente ou use o link hospedado."; statusEl.classList.add("text-red-400"); }
+                alert("Não foi possível enviar esse vídeo pra nuvem. Verifique sua internet e tente de novo, ou cole o link de um vídeo já hospedado. (Se o erro persistir, confirme que o bucket \"czk-midia\" existe e está marcado como Público no Supabase.)");
+                event.target.value = "";
+            }
         }
 
         // Usa o link de vídeo colado pelo lojista (em vez de um arquivo enviado do aparelho)
@@ -10511,7 +10394,7 @@ ${esgotado ? '' : `<div class="badge-destaque-3d"><span class="fire-icon fire-3d
             textoEl.style.textShadow = sombra === 'neon' ? sombraCss : 'none';
         }
 
-        function salvarPromoNotif() {
+        async function salvarPromoNotif() {
             // DIAGNÓSTICO: try/catch com aviso nativo garantido — se algo quebrar no meio do
             // caminho (ex: vídeo grande demais, campo inesperado), agora SEMPRE aparece um
             // aviso com o motivo, em vez de falhar em silêncio.
@@ -10549,11 +10432,27 @@ ${esgotado ? '' : `<div class="badge-destaque-3d"><span class="fire-icon fire-3d
                 promoNotifConfig.emojiImagemTamanho = Math.min(200, Math.max(20, parseInt(document.getElementById("promo-emoji-imagem-tamanho").value) || 64));
                 const tamanhoVideoKB = promoNotifConfig.videoUrl && promoNotifConfig.videoUrl.indexOf("data:") === 0
                     ? Math.round(promoNotifConfig.videoUrl.length / 1024) : 0;
-                czkSave("czk_promo_notif", promoNotifConfig);
-                if(tamanhoVideoKB > 4000) {
-                    alert("Notificação salva (localmente neste aparelho). Atenção: o vídeo enviado tem aproximadamente " + tamanhoVideoKB + " KB — vídeos grandes enviados como arquivo podem não sincronizar para outros aparelhos/clientes pela nuvem. Se possível, use a opção 'cole o link de um vídeo hospedado' em vez de enviar o arquivo direto.");
-                } else {
-                    czkAlert("Notificação promocional salva! Ela aparecerá para os clientes ao abrir o app.");
+                // CORREÇÃO: antes disso aqui era "czkSave(...)" sem esperar a resposta da nuvem —
+                // a mensagem de "salvo" aparecia na hora, MESMO que o envio pro Supabase falhasse
+                // (ex: vídeo grande demais) em segundo plano, sem avisar ninguém. Agora a função
+                // espera a confirmação de verdade antes de dizer que salvou, e avisa claramente
+                // quando só ficou salvo neste aparelho, sem ir pra nuvem.
+                const btnSalvar = document.querySelector('[onclick="salvarPromoNotif()"]');
+                let textoOriginalBtn = null;
+                if(btnSalvar) { textoOriginalBtn = btnSalvar.innerHTML; btnSalvar.disabled = true; btnSalvar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando para a nuvem...'; }
+                try {
+                    await czkSave("czk_promo_notif", promoNotifConfig);
+                    if(tamanhoVideoKB > 4000) {
+                        czkAlert("Notificação salva e enviada pra nuvem! Atenção: o vídeo tem ~" + tamanhoVideoKB + " KB — se algum cliente ou aparelho não estiver recebendo, prefira colar o link de um vídeo já hospedado (mais leve e confiável) em vez de enviar o arquivo direto.");
+                    } else {
+                        czkAlert("Notificação promocional salva e enviada pra nuvem! Ela aparecerá para os clientes ao abrir o app.");
+                    }
+                } catch(erroNuvem) {
+                    console.error("[salvarPromoNotif] falha ao enviar pra nuvem:", erroNuvem);
+                    const dica = tamanhoVideoKB > 4000 ? ` O vídeo enviado (~${tamanhoVideoKB} KB) provavelmente é grande demais para a nuvem. Use a opção "colar o link de um vídeo hospedado" em vez de enviar o arquivo direto.` : " Verifique sua internet e tente salvar de novo.";
+                    alert("⚠️ NÃO foi possível enviar pra nuvem — a notificação ficou salva só NESTE aparelho, os clientes e outros dispositivos ainda não vão ver essa mudança." + dica);
+                } finally {
+                    if(btnSalvar) { btnSalvar.disabled = false; btnSalvar.innerHTML = textoOriginalBtn; }
                 }
             } catch(e) {
                 console.error("[salvarPromoNotif] erro:", e);
@@ -15274,9 +15173,7 @@ ${esgotado ? '' : `<div class="badge-destaque-3d"><span class="fire-icon fire-3d
                 carregarGarcons();
                 czkRestaurarSessaoGarcom(); // login "lembrado" do garçom
                 carregarImpressoras();
-                renderNichosAdminTabs();
-                renderAdminProdutos();
-                renderHistorico();
+                if(adminLogado) { renderNichosAdminTabs(); renderAdminProdutos(); renderHistorico(); }
                 atualizarBairros();
                 atualizarPreviewTamanho();
                 if(devLogado) atualizarDadosDev();
