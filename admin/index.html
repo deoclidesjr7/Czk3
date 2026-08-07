@@ -10460,6 +10460,165 @@ ${esgotado ? '' : `<div class="badge-destaque-3d"><span class="fire-icon fire-3d
             }
         }
 
+        // ==================== SISTEMA DE SINCRONIZAÇÃO DE PROMOÇÕES (MÚLTIPLOS DISPOSITIVOS) ====================
+        // Este sistema garante que TODOS os clientes vejam as promoções atualizadas, mesmo com cache ativo.
+        // Funciona verificando periodicamente se a versão mudou no Supabase e recarregando automaticamente.
+        (function czkSistemaAtualizacaoPromocoes() {
+            const STORAGE_KEY_VERSAO = 'czk-promo-versao-local';
+            const STORAGE_KEY_DATA = 'czk-promo-data-local';
+            const INTERVALO_VERIFICACAO = 120000; // 2 minutos
+            
+            console.log('✅ Sistema de sincronização de promoções iniciado');
+
+            // 1. OBTER VERSÃO ATUAL DO BANCO
+            async function obterVersaoServidor() {
+                try {
+                    // Buscar última versão inserida
+                    const { data, error } = await czkSupabase
+                        .from('czk_promo_versao')
+                        .select('versao,data_atualizacao')
+                        .order('id', { ascending: false })
+                        .limit(1);
+
+                    if (error) {
+                        console.warn('[Promo Sync] Erro ao obter versão:', error);
+                        return null;
+                    }
+
+                    if (data && data.length > 0) {
+                        return {
+                            versao: data[0].versao,
+                            dataAtualizacao: data[0].data_atualizacao,
+                            timestamp: new Date(data[0].data_atualizacao).getTime()
+                        };
+                    }
+                    return null;
+                } catch (erro) {
+                    console.error('[Promo Sync] Erro ao obter versão servidor:', erro);
+                    return null;
+                }
+            }
+
+            // 2. LIMPAR CACHE DO SERVICE WORKER
+            async function limparCacheServiceWorker() {
+                if ('caches' in window) {
+                    try {
+                        const cacheNames = await caches.keys();
+                        const todasDeletedas = cacheNames.map(name => caches.delete(name));
+                        await Promise.all(todasDeletedas);
+                        console.log('✅ Cache do Service Worker limpo com sucesso');
+                    } catch (erro) {
+                        console.error('[Promo Sync] Erro ao limpar cache:', erro);
+                    }
+                }
+            }
+
+            // 3. ATUALIZAR URLS COM TIMESTAMP (CACHE-BUSTING)
+            async function atualizarUrlsComTimestamp(timestamp) {
+                try {
+                    // Atualizar todas as imagens e vídeos da pasta /czk-midia/ com novo timestamp
+                    const seletores = [
+                        'img[src*="/storage/v1/object/public/czk-midia"]',
+                        'video[src*="/storage/v1/object/public/czk-midia"]',
+                        'img[data-src*="/storage/v1/object/public/czk-midia"]'
+                    ];
+
+                    seletores.forEach(seletor => {
+                        document.querySelectorAll(seletor).forEach(el => {
+                            const atributo = el.tagName === 'IMG' && el.hasAttribute('data-src') ? 'data-src' : 'src';
+                            let src = el.getAttribute(atributo);
+
+                            if (src) {
+                                // Remove versão anterior se existir
+                                const urlSemVersao = src.split('?v=')[0];
+                                const novaUrl = `${urlSemVersao}?v=${timestamp}`;
+                                el.setAttribute(atributo, novaUrl);
+                            }
+                        });
+                    });
+
+                    // Também atualizar background-images em CSS inline
+                    document.querySelectorAll('[style*="background-image"]').forEach(el => {
+                        let style = el.getAttribute('style');
+                        if (style.includes('/storage/v1/object/public/czk-midia')) {
+                            const urlMatch = style.match(/url\(['"]?([^'")\]]+)['"]?\)/);
+                            if (urlMatch) {
+                                const urlSemVersao = urlMatch[1].split('?v=')[0];
+                                const novaUrl = `url('${urlSemVersao}?v=${timestamp}')`;
+                                style = style.replace(/url\(['"]?[^'")\]]+['"]?\)/, novaUrl);
+                                el.setAttribute('style', style);
+                            }
+                        }
+                    });
+
+                    console.log(`✅ URLs atualizadas com timestamp: ${timestamp}`);
+                } catch (erro) {
+                    console.error('[Promo Sync] Erro ao atualizar URLs:', erro);
+                }
+            }
+
+            // 4. VERIFICAR E SINCRONIZAR ATUALIZAÇÕES
+            async function verificarAtualizacoes() {
+                try {
+                    const versaoServidor = await obterVersaoServidor();
+                    if (!versaoServidor) return;
+
+                    const versaoLocal = localStorage.getItem(STORAGE_KEY_VERSAO) || '0.0.0';
+                    const dataLocal = localStorage.getItem(STORAGE_KEY_DATA) || '0';
+
+                    // Se versão mudou, fazer reload completo
+                    if (versaoServidor.versao !== versaoLocal) {
+                        console.log(`🔄 Nova versão detectada: ${versaoLocal} → ${versaoServidor.versao}`);
+
+                        await limparCacheServiceWorker();
+                        localStorage.setItem(STORAGE_KEY_VERSAO, versaoServidor.versao);
+                        localStorage.setItem(STORAGE_KEY_DATA, versaoServidor.dataAtualizacao);
+
+                        // Recarregar a página em 1 segundo
+                        setTimeout(() => window.location.reload(), 1000);
+                    }
+                    // Se data de atualização mudou (promoção atualizada sem versão mudar)
+                    else if (versaoServidor.dataAtualizacao !== dataLocal) {
+                        console.log('🎯 Promoções atualizadas! Sincronizando imagens...');
+
+                        localStorage.setItem(STORAGE_KEY_DATA, versaoServidor.dataAtualizacao);
+                        await atualizarUrlsComTimestamp(versaoServidor.timestamp);
+                    }
+                } catch (erro) {
+                    console.error('[Promo Sync] Erro ao verificar atualizações:', erro);
+                }
+            }
+
+            // 5. INICIALIZAR SISTEMA
+            async function inicializar() {
+                console.log('🚀 Inicializando sincronização de promoções...');
+
+                // Verificação inicial
+                await verificarAtualizacoes();
+
+                // Verificações periódicas (a cada 2 minutos)
+                setInterval(verificarAtualizacoes, INTERVALO_VERIFICACAO);
+
+                console.log('✅ Sistema de sincronização de promoções pronto!');
+            }
+
+            // Executar quando página carregar
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', inicializar);
+            } else {
+                inicializar();
+            }
+
+            // Expor funções globalmente para debug/teste via console
+            window.czkPromoSync = {
+                verificar: verificarAtualizacoes,
+                obterVersao: obterVersaoServidor,
+                limparCache: limparCacheServiceWorker,
+                atualizarUrls: atualizarUrlsComTimestamp
+            };
+        })();
+        // ==================== FIM DO SISTEMA DE SINCRONIZAÇÃO ====================
+
         function aplicarEstiloNotifNaTela() {
             const card = document.getElementById("promo-card");
             if(!card) return;
